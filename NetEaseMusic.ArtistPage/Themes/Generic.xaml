@@ -1,0 +1,11 @@
+<ResourceDictionary
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:NetEaseMusic.ArtistPage">
+    <ResourceDictionary.MergedDictionaries>
+        <ResourceDictionary Source="/Controls/Tabs/Tabs.xaml" />
+        <ResourceDictionary Source="/Controls/Tabs/TabsItem.xaml" />
+        <ResourceDictionary Source="/Controls/Tabs/TabsHeaderView.xaml" />
+        <ResourceDictionary Source="/Controls/Tabs/TabsHeaderItem.xaml" />
+    </ResourceDictionary.MergedDictionaries>
+</ResourceDictionary>

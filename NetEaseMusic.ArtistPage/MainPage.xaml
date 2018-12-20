@@ -1,0 +1,28 @@
+﻿<Page
+    x:Class="NetEaseMusic.ArtistPage.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:NetEaseMusic.ArtistPage"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:tabs="using:NetEaseMusic.ArtistPage.Controls.Tabs"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+    <Grid>
+        <tabs:Tabs SelectedIndex="2">
+            <tabs:TabsItem Header="Red">
+                <Rectangle HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Fill="Red" Loaded="Rectangle_Loaded" />
+            </tabs:TabsItem>
+            <tabs:TabsItem Header="Green">
+                <Rectangle HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Fill="Green"  Loaded="Rectangle_Loaded"/>
+            </tabs:TabsItem>
+            <tabs:TabsItem Header="Blue">
+                <Rectangle HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Fill="Blue" Loaded="Rectangle_Loaded"/>
+            </tabs:TabsItem>
+            <tabs:TabsItem Header="Yellow">
+                <Rectangle HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Fill="Yellow" Loaded="Rectangle_Loaded"/>
+            </tabs:TabsItem>
+        </tabs:Tabs>
+    </Grid>
+</Page>
