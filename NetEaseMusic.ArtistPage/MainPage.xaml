@@ -5,24 +5,24 @@
     xmlns:local="using:NetEaseMusic.ArtistPage"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:tabs="using:NetEaseMusic.ArtistPage.Controls.Tabs"
+    xmlns:tab="using:NetEaseMusic.ArtistPage.Controls.Tab"
     mc:Ignorable="d"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
     <Grid>
-        <tabs:Tabs SelectedIndex="2">
-            <tabs:TabsItem Header="Red">
+        <tab:Tab SelectedIndex="2">
+            <tab:TabItem Header="Red">
                 <Rectangle HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Fill="Red" Loaded="Rectangle_Loaded" />
-            </tabs:TabsItem>
-            <tabs:TabsItem Header="Green">
+            </tab:TabItem>
+            <tab:TabItem Header="GreenGreenGreen">
                 <Rectangle HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Fill="Green"  Loaded="Rectangle_Loaded"/>
-            </tabs:TabsItem>
-            <tabs:TabsItem Header="Blue">
+            </tab:TabItem>
+            <tab:TabItem Header="Blue">
                 <Rectangle HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Fill="Blue" Loaded="Rectangle_Loaded"/>
-            </tabs:TabsItem>
-            <tabs:TabsItem Header="Yellow">
+            </tab:TabItem>
+            <tab:TabItem Header="Yellow">
                 <Rectangle HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Fill="Yellow" Loaded="Rectangle_Loaded"/>
-            </tabs:TabsItem>
-        </tabs:Tabs>
+            </tab:TabItem>
+        </tab:Tab>
     </Grid>
 </Page>

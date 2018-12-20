@@ -95,10 +95,11 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
-    <Compile Include="Controls\Tabs\Tabs.cs" />
-    <Compile Include="Controls\Tabs\TabsHeaderItem.cs" />
-    <Compile Include="Controls\Tabs\TabsHeaderView.cs" />
-    <Compile Include="Controls\Tabs\TabsItem.cs" />
+    <Compile Include="Controls\Tab\ITabHeader.cs" />
+    <Compile Include="Controls\Tab\Tab.cs" />
+    <Compile Include="Controls\Tab\TabHeaderItem.cs" />
+    <Compile Include="Controls\Tab\TabHeaderView.cs" />
+    <Compile Include="Controls\Tab\TabItem.cs" />
     <Compile Include="MainPage.xaml.cs">
       <DependentUpon>MainPage.xaml</DependentUpon>
     </Compile>
@@ -125,19 +126,19 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Page Include="Controls\Tabs\Tabs.xaml">
+    <Page Include="Controls\Tab\Tab.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Controls\Tabs\TabsHeaderItem.xaml">
+    <Page Include="Controls\Tab\TabHeaderItem.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Controls\Tabs\TabsHeaderView.xaml">
+    <Page Include="Controls\Tab\TabHeaderView.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="Controls\Tabs\TabsItem.xaml">
+    <Page Include="Controls\Tab\TabItem.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

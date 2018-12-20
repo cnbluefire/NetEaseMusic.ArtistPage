@@ -3,9 +3,9 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:local="using:NetEaseMusic.ArtistPage">
     <ResourceDictionary.MergedDictionaries>
-        <ResourceDictionary Source="/Controls/Tabs/Tabs.xaml" />
-        <ResourceDictionary Source="/Controls/Tabs/TabsItem.xaml" />
-        <ResourceDictionary Source="/Controls/Tabs/TabsHeaderView.xaml" />
-        <ResourceDictionary Source="/Controls/Tabs/TabsHeaderItem.xaml" />
+        <ResourceDictionary Source="/Controls/Tab/Tab.xaml" />
+        <ResourceDictionary Source="/Controls/Tab/TabItem.xaml" />
+        <ResourceDictionary Source="/Controls/Tab/TabHeaderView.xaml" />
+        <ResourceDictionary Source="/Controls/Tab/TabHeaderItem.xaml" />
     </ResourceDictionary.MergedDictionaries>
 </ResourceDictionary>

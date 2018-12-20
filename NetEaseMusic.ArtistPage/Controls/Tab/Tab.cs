@@ -19,14 +19,14 @@ using Windows.UI.Xaml.Media;
 
 // The Templated Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234235
 
-namespace NetEaseMusic.ArtistPage.Controls.Tabs
+namespace NetEaseMusic.ArtistPage.Controls.Tab
 {
     [ContentProperty(Name = "Items")]
-    public sealed class Tabs : ItemsControl
+    public sealed class Tab : ItemsControl
     {
-        public Tabs()
+        public Tab()
         {
-            this.DefaultStyleKey = typeof(Tabs);
+            this.DefaultStyleKey = typeof(Tab);
             this.Loaded += OnLoaded;
         }
 
@@ -34,13 +34,14 @@ namespace NetEaseMusic.ArtistPage.Controls.Tabs
 
         private bool _IsLoaded;
 
-        ObservableCollection<object> Headers = new ObservableCollection<object>();
         CancellationTokenSource SizeChangedToken;
 
         ScrollViewer ScrollViewer;
-        TabsHeaderView TabsHeaderView;
+        TabHeaderView TabsHeaderView;
 
         CompositionPropertySet ScrollPropertySet;
+
+        int NowScrollIndex = -1;
         #endregion Field
 
         #region Overrides
@@ -50,42 +51,49 @@ namespace NetEaseMusic.ArtistPage.Controls.Tabs
             base.OnApplyTemplate();
 
             ScrollViewer = GetTemplateChild("ScrollViewer") as ScrollViewer;
-            TabsHeaderView = GetTemplateChild("TabsHeaderView") as TabsHeaderView;
+            TabsHeaderView = GetTemplateChild("TabsHeaderView") as TabHeaderView;
 
-            TabsHeaderView.ItemsSource = Headers;
             TabsHeaderView.SelectionChanged += OnHeaderSelectionChanged;
 
             this.SizeChanged += OnSizeChanged;
+            ScrollViewer.DirectManipulationStarted += OnDirectManipulationStarted;
+            ScrollViewer.DirectManipulationCompleted += OnDirectManipulationCompleted;
+            ScrollViewer.ViewChanging += OnViewChanging;
 
             SetupComposition();
         }
 
-
         protected override DependencyObject GetContainerForItemOverride()
         {
-            return new TabsItem();
+            return new TabItem();
         }
 
         protected override bool IsItemItsOwnContainerOverride(object item)
         {
-            return item is TabsItem;
+            return item is TabItem;
         }
 
         #endregion Overrides
 
         #region Private Methods
 
+
+        private int CalcIndex()
+        {
+            return (int)Math.Round(ScrollViewer.HorizontalOffset / ScrollViewer.ActualWidth);
+        }
+
         private void SetupComposition()
         {
             ScrollPropertySet = ElementCompositionPreview.GetScrollViewerManipulationPropertySet(ScrollViewer);
-            TabsHeaderView.SetTabsRootScrollPropertySet(ScrollPropertySet);
+            ((ITabHeader)TabsHeaderView).SetTabsRootScrollPropertySet(ScrollPropertySet);
         }
 
-        private void UpdateSelectedIndex(int Index, bool disableAnimation = false)
+        private void SyncSelectedIndex(int Index, bool disableAnimation = false)
         {
             if (SelectedIndex > -1)
             {
-                (ContainerFromIndex(Index) as ContentControl)?.StartBringIntoView(new BringIntoViewOptions() { AnimationDesired = !disableAnimation });
+                (ContainerFromIndex(Index) as ContentControl)?.StartBringIntoView(new BringIntoViewOptions() { AnimationDesired = !(disableAnimation) });
             }
             else
             {
@@ -93,12 +101,12 @@ namespace NetEaseMusic.ArtistPage.Controls.Tabs
             }
         }
 
-        private void SyncSelectedIndex(int NewIndex, int OldIndex)
+        private void UpdateSelectedIndex(int NewIndex, int OldIndex)
         {
             if (OldIndex > -1)
             {
                 var oldContainer = ContainerFromIndex(OldIndex);
-                if (oldContainer is TabsItem oldTabsItem)
+                if (oldContainer is TabItem oldTabsItem)
                 {
                     oldTabsItem.Selected = false;
                 }
@@ -106,7 +114,7 @@ namespace NetEaseMusic.ArtistPage.Controls.Tabs
             if (NewIndex > -1)
             {
                 var newContainer = ContainerFromIndex(NewIndex);
-                if (newContainer is TabsItem newTabsItem)
+                if (newContainer is TabItem newTabsItem)
                 {
                     newTabsItem.Selected = true;
                     SelectedIndex = NewIndex;
@@ -125,9 +133,9 @@ namespace NetEaseMusic.ArtistPage.Controls.Tabs
             }
         }
 
-        private void SyncSelectedIndex(object NewItem, object OldItem)
+        private void UpdateSelectedIndex(object NewItem, object OldItem)
         {
-            SyncSelectedIndex(Items.IndexOf(NewItem), Items.IndexOf(OldItem));
+            UpdateSelectedIndex(Items.IndexOf(NewItem), Items.IndexOf(OldItem));
         }
 
         #endregion Private Methods
@@ -136,31 +144,53 @@ namespace NetEaseMusic.ArtistPage.Controls.Tabs
 
         private void OnHeaderSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            UpdateSelectedIndex(TabsHeaderView.SelectedIndex);
-            SyncSelectedIndex(TabsHeaderView.SelectedIndex, SelectedIndex);
+            SyncSelectedIndex(TabsHeaderView.SelectedIndex);
+            UpdateSelectedIndex(TabsHeaderView.SelectedIndex, SelectedIndex);
         }
 
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
-            foreach (var header in Items.Select(c => (ContainerFromItem(c) as TabsItem)?.Header))
+            foreach (var header in Items.Select(c => (ContainerFromItem(c) as TabItem)?.Header))
             {
-                Headers.Add(header);
+                TabsHeaderView.Items.Add(header);
             }
             if (Items.Count > 0)
             {
                 if (SelectedIndex == -1)
                 {
-                    SyncSelectedIndex(0, -1);
+                    UpdateSelectedIndex(0, -1);
                 }
                 else
                 {
-                    SyncSelectedIndex(SelectedIndex, -1);
+                    UpdateSelectedIndex(SelectedIndex, -1);
                 }
             }
             _IsLoaded = true;
-            SyncSelectedIndex(SelectedIndex, -1);
-            UpdateSelectedIndex(SelectedIndex, true);
-            TabsHeaderView.OnTabsLoaded();
+            UpdateSelectedIndex(SelectedIndex, -1);
+            SyncSelectedIndex(SelectedIndex, true);
+            ((ITabHeader)TabsHeaderView).OnTabsLoaded();
+        }
+
+        private void OnViewChanging(object sender, ScrollViewerViewChangingEventArgs e)
+        {
+            var tmp = (int)((e.NextView.HorizontalOffset) / ScrollViewer.ActualWidth);
+
+            if (NowScrollIndex != tmp)
+            {
+                ((ITabHeader)TabsHeaderView).SyncSelection(tmp);
+            }
+            NowScrollIndex = tmp;
+        }
+
+        private void OnDirectManipulationStarted(object sender, object e)
+        {
+            ScrollViewer.HorizontalSnapPointsType = SnapPointsType.MandatorySingle;
+        }
+
+        private void OnDirectManipulationCompleted(object sender, object e)
+        {
+            UpdateSelectedIndex(CalcIndex(), SelectedIndex);
+            ScrollViewer.HorizontalSnapPointsType = SnapPointsType.Mandatory;
         }
 
         private void OnSizeChanged(object sender, SizeChangedEventArgs e)
@@ -168,26 +198,24 @@ namespace NetEaseMusic.ArtistPage.Controls.Tabs
             if (ScrollViewer == null) return;
             foreach (var item in Items)
             {
-                if (ContainerFromItem(item) is TabsItem tabsItem)
+                if (ContainerFromItem(item) is TabItem tabsItem)
                 {
                     tabsItem.Width = ScrollViewer.ActualWidth;
                 }
             }
-            TabsHeaderView.SetTabsWidth(e.NewSize.Width);
+            ((ITabHeader)TabsHeaderView).SetTabsWidth(e.NewSize.Width);
 
             SizeChangedToken?.Cancel();
             SizeChangedToken = new CancellationTokenSource();
             Task.Run(() => Task.Delay(50), SizeChangedToken.Token)
                 .ContinueWith(
                     async (t) => await this.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.High,
-                        () => UpdateSelectedIndex(SelectedIndex, true)));
+                        () => SyncSelectedIndex(SelectedIndex, true)));
         }
 
         #endregion Events
 
         #region Dependency Properties
-
-
 
         public Color IndicatorColor
         {
@@ -214,36 +242,36 @@ namespace NetEaseMusic.ArtistPage.Controls.Tabs
         }
 
         public static readonly DependencyProperty IndicatorColorProperty =
-            DependencyProperty.Register("IndicatorColor", typeof(Color), typeof(Tabs), new PropertyMetadata(null));
+            DependencyProperty.Register("IndicatorColor", typeof(Color), typeof(Tab), new PropertyMetadata(null));
 
         public static readonly DependencyProperty HeaderTemplateProperty =
-            DependencyProperty.Register("HeaderTemplate", typeof(DataTemplate), typeof(Tabs), new PropertyMetadata(null));
+            DependencyProperty.Register("HeaderTemplate", typeof(DataTemplate), typeof(Tab), new PropertyMetadata(null));
 
         public static readonly DependencyProperty SelectedItemProperty =
-            DependencyProperty.Register("SelectedItem", typeof(object), typeof(Tabs), new PropertyMetadata(null, (s, a) =>
+            DependencyProperty.Register("SelectedItem", typeof(object), typeof(Tab), new PropertyMetadata(null, (s, a) =>
             {
                 if (a.NewValue != a.OldValue)
                 {
-                    if (s is Tabs sender)
+                    if (s is Tab sender)
                     {
                         if (sender._IsLoaded)
                         {
-                            sender.SyncSelectedIndex(a.NewValue, a.OldValue);
+                            sender.UpdateSelectedIndex(a.NewValue, a.OldValue);
                         }
                     }
                 }
             }));
 
         public static readonly DependencyProperty SelectedIndexProperty =
-            DependencyProperty.Register("SelectedIndex", typeof(int), typeof(Tabs), new PropertyMetadata(-1, (s, a) =>
+            DependencyProperty.Register("SelectedIndex", typeof(int), typeof(Tab), new PropertyMetadata(-1, (s, a) =>
             {
                 if (a.NewValue != a.OldValue)
                 {
-                    if (s is Tabs sender)
+                    if (s is Tab sender)
                     {
                         if (sender._IsLoaded)
                         {
-                            sender.SyncSelectedIndex((int)a.NewValue, (int)a.OldValue);
+                            sender.UpdateSelectedIndex((int)a.NewValue, (int)a.OldValue);
                         }
                     }
                 }
@@ -262,7 +290,7 @@ namespace NetEaseMusic.ArtistPage.Controls.Tabs
         #endregion Custom Events
     }
 
-    public delegate void TabsSelectionChangedEvent(Tabs sender, TabsSelectionChangedEventArgs args);
+    public delegate void TabsSelectionChangedEvent(Tab sender, TabsSelectionChangedEventArgs args);
 
     public class TabsSelectionChangedEventArgs : EventArgs
     {

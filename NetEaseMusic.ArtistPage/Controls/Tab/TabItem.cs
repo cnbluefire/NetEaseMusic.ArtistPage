@@ -12,14 +12,14 @@ using Windows.UI.Xaml.Media;
 
 // The Templated Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234235
 
-namespace NetEaseMusic.ArtistPage.Controls.Tabs
+namespace NetEaseMusic.ArtistPage.Controls.Tab
 {
     [ContentProperty(Name = "Content")]
-    public sealed class TabsItem : ContentControl
+    public sealed class TabItem : ContentControl
     {
-        public TabsItem()
+        public TabItem()
         {
-            this.DefaultStyleKey = typeof(TabsItem);
+            this.DefaultStyleKey = typeof(TabItem);
         }
 
         private bool lazyLoaded = false;
@@ -31,7 +31,6 @@ namespace NetEaseMusic.ArtistPage.Controls.Tabs
             VisualStateManager.GoToState(this, "Load", false);
         }
 
-
         public bool Selected
         {
             get { return (bool)GetValue(SelectedProperty); }
@@ -39,11 +38,11 @@ namespace NetEaseMusic.ArtistPage.Controls.Tabs
         }
 
         public static readonly DependencyProperty SelectedProperty =
-            DependencyProperty.Register("Selected", typeof(bool), typeof(TabsItem), new PropertyMetadata(false, (s, a) =>
+            DependencyProperty.Register("Selected", typeof(bool), typeof(TabItem), new PropertyMetadata(false, (s, a) =>
             {
                 if (a.NewValue != a.OldValue)
                 {
-                    if (s is TabsItem sender)
+                    if (s is TabItem sender)
                     {
                         if (a.NewValue is true)
                         {
@@ -64,7 +63,7 @@ namespace NetEaseMusic.ArtistPage.Controls.Tabs
 
         // Using a DependencyProperty as the backing store for Header.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty HeaderProperty =
-            DependencyProperty.Register("Header", typeof(object), typeof(TabsItem), new PropertyMetadata(null));
+            DependencyProperty.Register("Header", typeof(object), typeof(TabItem), new PropertyMetadata(null));
 
 
     }

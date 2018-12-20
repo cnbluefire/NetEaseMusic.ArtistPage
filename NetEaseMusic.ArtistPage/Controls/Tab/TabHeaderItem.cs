@@ -11,13 +11,13 @@ using Windows.UI.Xaml.Media;
 
 // The Templated Control item template is documented at https://go.microsoft.com/fwlink/?LinkId=234235
 
-namespace NetEaseMusic.ArtistPage.Controls.Tabs
+namespace NetEaseMusic.ArtistPage.Controls.Tab
 {
-    public sealed class TabsHeaderItem : ListBoxItem
+    public sealed class TabHeaderItem : ListBoxItem
     {
-        public TabsHeaderItem()
+        public TabHeaderItem()
         {
-            this.DefaultStyleKey = typeof(TabsHeaderItem);
+            this.DefaultStyleKey = typeof(TabHeaderItem);
         }
     }
 }
