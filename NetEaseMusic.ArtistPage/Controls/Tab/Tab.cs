@@ -28,6 +28,7 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
         {
             this.DefaultStyleKey = typeof(Tab);
             this.Loaded += OnLoaded;
+            this.Unloaded += OnUnloaded;
         }
 
         #region Field
@@ -35,13 +36,15 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
         private bool _IsLoaded;
 
         CancellationTokenSource SizeChangedToken;
-
+        PointerEventHandler OnPointerWheel;
         ScrollViewer ScrollViewer;
-        TabHeaderView TabsHeaderView;
+        ITabHeader TabHeader;
 
         CompositionPropertySet ScrollPropertySet;
 
         int NowScrollIndex = -1;
+        int NextContainerIndex = -1;
+
         #endregion Field
 
         #region Overrides
@@ -51,16 +54,26 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
             base.OnApplyTemplate();
 
             ScrollViewer = GetTemplateChild("ScrollViewer") as ScrollViewer;
-            TabsHeaderView = GetTemplateChild("TabsHeaderView") as TabHeaderView;
+            TabHeader = GetTemplateChild("TabsHeaderView") as ITabHeader;
 
-            TabsHeaderView.SelectionChanged += OnHeaderSelectionChanged;
+            if (TabHeader != null)
+            {
+                TabHeader.SelectionChanged += OnHeaderSelectionChanged;
+            }
+            if (ScrollViewer != null)
+            {
+                ScrollViewer.DirectManipulationStarted += OnDirectManipulationStarted;
+                ScrollViewer.DirectManipulationCompleted += OnDirectManipulationCompleted;
+                ScrollViewer.ViewChanging += OnViewChanging;
+
+                OnPointerWheel = (s,a) => ItemsPanelRoot?.CancelDirectManipulations();
+
+                ScrollViewer.AddHandler(PointerWheelChangedEvent, OnPointerWheel, true);
+            }
 
             this.SizeChanged += OnSizeChanged;
-            ScrollViewer.DirectManipulationStarted += OnDirectManipulationStarted;
-            ScrollViewer.DirectManipulationCompleted += OnDirectManipulationCompleted;
-            ScrollViewer.ViewChanging += OnViewChanging;
 
-            SetupComposition();
+            TrySetupComposition();
         }
 
         protected override DependencyObject GetContainerForItemOverride()
@@ -83,10 +96,13 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
             return (int)Math.Round(ScrollViewer.HorizontalOffset / ScrollViewer.ActualWidth);
         }
 
-        private void SetupComposition()
+        private void TrySetupComposition()
         {
-            ScrollPropertySet = ElementCompositionPreview.GetScrollViewerManipulationPropertySet(ScrollViewer);
-            ((ITabHeader)TabsHeaderView).SetTabsRootScrollPropertySet(ScrollPropertySet);
+            if (TabHeader != null)
+            {
+                ScrollPropertySet = ElementCompositionPreview.GetScrollViewerManipulationPropertySet(ScrollViewer);
+                TabHeader.SetTabsRootScrollPropertySet(ScrollPropertySet);
+            }
         }
 
         private void SyncSelectedIndex(int Index, bool disableAnimation = false)
@@ -116,20 +132,20 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
                 var newContainer = ContainerFromIndex(NewIndex);
                 if (newContainer is TabItem newTabsItem)
                 {
-                    newTabsItem.Selected = true;
+                    ActiveContainer(NewIndex);
                     SelectedIndex = NewIndex;
                     SelectedItem = NewIndex;
-                    TabsHeaderView.SelectedIndex = NewIndex;
-                    OnTabsSelectionChanged(NewIndex, OldIndex);
+                    TabHeader.SelectedIndex = NewIndex;
+                    OnSelectionChanged(NewIndex, OldIndex);
                 }
                 else
                 {
-                    OnTabsSelectionChanged(-1, OldIndex);
+                    OnSelectionChanged(-1, OldIndex);
                 }
             }
             else
             {
-                OnTabsSelectionChanged(-1, OldIndex);
+                OnSelectionChanged(-1, OldIndex);
             }
         }
 
@@ -138,21 +154,33 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
             UpdateSelectedIndex(Items.IndexOf(NewItem), Items.IndexOf(OldItem));
         }
 
+        private void ActiveContainer(int Index)
+        {
+            if (_IsLoaded && Index > -1 && Index < Items.Count)
+            {
+                var newContainer = ContainerFromIndex(Index);
+                if (newContainer is TabItem newTabsItem)
+                {
+                    newTabsItem.Selected = true;
+                }
+            }
+        }
+
         #endregion Private Methods
 
-        #region Events
+        #region Events Methods
 
         private void OnHeaderSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            SyncSelectedIndex(TabsHeaderView.SelectedIndex);
-            UpdateSelectedIndex(TabsHeaderView.SelectedIndex, SelectedIndex);
+            SyncSelectedIndex(e.NewIndex);
+            UpdateSelectedIndex(e.NewIndex, e.OldIndex);
         }
 
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
             foreach (var header in Items.Select(c => (ContainerFromItem(c) as TabItem)?.Header))
             {
-                TabsHeaderView.Items.Add(header);
+                TabHeader.Items.Add(header);
             }
             if (Items.Count > 0)
             {
@@ -165,21 +193,45 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
                     UpdateSelectedIndex(SelectedIndex, -1);
                 }
             }
-            _IsLoaded = true;
+
             UpdateSelectedIndex(SelectedIndex, -1);
             SyncSelectedIndex(SelectedIndex, true);
-            ((ITabHeader)TabsHeaderView).OnTabsLoaded();
+            TabHeader.OnTabsLoaded();
+            _IsLoaded = true;
+            ActiveContainer(SelectedIndex);
+        }
+
+        private void OnUnloaded(object sender, RoutedEventArgs e)
+        {
+            _IsLoaded = false;
+            ScrollPropertySet.Dispose();
+            ScrollPropertySet = null;
+            ScrollViewer.RemoveHandler(PointerWheelChangedEvent, OnPointerWheel);
         }
 
         private void OnViewChanging(object sender, ScrollViewerViewChangingEventArgs e)
         {
-            var tmp = (int)((e.NextView.HorizontalOffset) / ScrollViewer.ActualWidth);
+            var tmp = (int)(e.NextView.HorizontalOffset / ScrollViewer.ActualWidth);
 
             if (NowScrollIndex != tmp)
             {
-                ((ITabHeader)TabsHeaderView).SyncSelection(tmp);
+                TabHeader.SyncSelection(tmp);
+                NowScrollIndex = tmp;
             }
-            NowScrollIndex = tmp;
+
+            if (NextContainerIndex != NowScrollIndex)
+            {
+                if (e.NextView.HorizontalOffset != ScrollViewer.ActualWidth * tmp)
+                {
+                    ActiveContainer(NowScrollIndex);
+                    ActiveContainer(NowScrollIndex + 1);
+                    if (_IsLoaded)
+                    {
+                        NextContainerIndex = NowScrollIndex;
+                    }
+                }
+            }
+
         }
 
         private void OnDirectManipulationStarted(object sender, object e)
@@ -201,9 +253,10 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
                 if (ContainerFromItem(item) is TabItem tabsItem)
                 {
                     tabsItem.Width = ScrollViewer.ActualWidth;
+                    tabsItem.Height = ScrollViewer.ActualHeight;
                 }
             }
-            ((ITabHeader)TabsHeaderView).SetTabsWidth(e.NewSize.Width);
+            TabHeader.SetTabsWidth(e.NewSize.Width);
 
             SizeChangedToken?.Cancel();
             SizeChangedToken = new CancellationTokenSource();
@@ -213,7 +266,7 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
                         () => SyncSelectedIndex(SelectedIndex, true)));
         }
 
-        #endregion Events
+        #endregion Events Methods
 
         #region Dependency Properties
 
@@ -241,11 +294,36 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
             set { SetValue(SelectedIndexProperty, value); }
         }
 
-        public static readonly DependencyProperty IndicatorColorProperty =
-            DependencyProperty.Register("IndicatorColor", typeof(Color), typeof(Tab), new PropertyMetadata(null));
 
-        public static readonly DependencyProperty HeaderTemplateProperty =
-            DependencyProperty.Register("HeaderTemplate", typeof(DataTemplate), typeof(Tab), new PropertyMetadata(null));
+
+        public object LeftHeader
+        {
+            get { return (object)GetValue(LeftHeaderProperty); }
+            set { SetValue(LeftHeaderProperty, value); }
+        }
+
+        public static readonly DependencyProperty LeftHeaderProperty =
+            DependencyProperty.Register("LeftHeader", typeof(object), typeof(Tab), new PropertyMetadata(null));
+
+
+        public object RightHeader
+        {
+            get { return (object)GetValue(RightHeaderProperty); }
+            set { SetValue(RightHeaderProperty, value); }
+        }
+
+        public DataTemplate LeftHeaderTemplate
+        {
+            get { return (DataTemplate)GetValue(LeftHeaderTemplateProperty); }
+            set { SetValue(LeftHeaderTemplateProperty, value); }
+        }
+
+        public DataTemplate RightHeaderTemplate
+        {
+            get { return (DataTemplate)GetValue(RightHeaderTemplateProperty); }
+            set { SetValue(RightHeaderTemplateProperty, value); }
+        }
+
 
         public static readonly DependencyProperty SelectedItemProperty =
             DependencyProperty.Register("SelectedItem", typeof(object), typeof(Tab), new PropertyMetadata(null, (s, a) =>
@@ -277,22 +355,38 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
                 }
             }));
 
+
+        public static readonly DependencyProperty RightHeaderProperty =
+            DependencyProperty.Register("RightHeader", typeof(object), typeof(Tab), new PropertyMetadata(null));
+        
+        public static readonly DependencyProperty LeftHeaderTemplateProperty =
+            DependencyProperty.Register("LeftHeaderTemplate", typeof(DataTemplate), typeof(Tab), new PropertyMetadata(null));
+        
+        public static readonly DependencyProperty RightHeaderTemplateProperty =
+            DependencyProperty.Register("RightHeaderTemplate", typeof(DataTemplate), typeof(Tab), new PropertyMetadata(null));
+        
+        public static readonly DependencyProperty IndicatorColorProperty =
+            DependencyProperty.Register("IndicatorColor", typeof(Color), typeof(Tab), new PropertyMetadata(null));
+
+        public static readonly DependencyProperty HeaderTemplateProperty =
+            DependencyProperty.Register("HeaderTemplate", typeof(DataTemplate), typeof(Tab), new PropertyMetadata(null));
+
         #endregion Dependency Properties
 
         #region Custom Events
 
-        public event TabsSelectionChangedEvent TabsSelectionChanged;
-        private void OnTabsSelectionChanged(int NewIndex, int OldIndex)
+        public event TabSelectionChangedEvent SelectionChanged;
+        private void OnSelectionChanged(int NewIndex, int OldIndex)
         {
-            TabsSelectionChanged?.Invoke(this, new TabsSelectionChangedEventArgs() { NewIndex = NewIndex, OldIndex = OldIndex });
+            SelectionChanged?.Invoke(this, new TabSelectionChangedEventArgs() { NewIndex = NewIndex, OldIndex = OldIndex });
         }
 
         #endregion Custom Events
     }
 
-    public delegate void TabsSelectionChangedEvent(Tab sender, TabsSelectionChangedEventArgs args);
+    public delegate void TabSelectionChangedEvent(Tab sender, TabSelectionChangedEventArgs args);
 
-    public class TabsSelectionChangedEventArgs : EventArgs
+    public class TabSelectionChangedEventArgs : EventArgs
     {
         public int NewIndex { get; set; }
         public int OldIndex { get; set; }

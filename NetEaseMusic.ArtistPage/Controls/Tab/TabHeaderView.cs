@@ -20,6 +20,8 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
         {
             this.DefaultStyleKey = typeof(TabHeaderView);
             this.Loaded += OnLoaded;
+            this.Unloaded += OnUnloaded;
+            this.SelectionChanged += OnSelectionChanged;
         }
 
         #region Field
@@ -269,12 +271,12 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
 
         async void ITabHeader.OnTabsLoaded()
         {
-            await Task.Delay(100);
-            UpdateContainerWidths();
             if (SelectedIndex > -1)
             {
                 PropSet.InsertScalar("SelectedIndex", SelectedIndex);
             }
+            UpdateContainerWidths();
+            await Task.Delay(100);
         }
 
         void ITabHeader.SyncSelection(int Index)
@@ -302,6 +304,73 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
             {
                 PropSet.InsertScalar("NowWidth", Convert.ToSingle(ContainerWidths[SelectedIndex]));
             }
+        }
+
+        private void OnUnloaded(object sender, RoutedEventArgs e)
+        {
+            _IsLoaded = false;
+
+            if (ScrollViewer != null)
+            {
+                ElementCompositionPreview.SetElementChildVisual(ScrollViewer, null);
+            }
+
+            ScrollPropertySet?.Dispose();
+            ScrollPropertySet = null;
+
+            HeaderScrollPropertySet?.Dispose();
+            HeaderScrollPropertySet = null;
+
+            PropSet?.Dispose();
+            PropSet = null;
+
+            Indicator?.Dispose();
+            Indicator = null;
+
+            ScrollViewerVisual?.Dispose();
+            ScrollViewerVisual = null;
+
+            ProgressExpression?.Dispose();
+            ProgressExpression = null;
+
+            IndicatorOffsetExpression?.Dispose();
+            IndicatorOffsetExpression = null;
+
+            IndicatorSizeExpression?.Dispose();
+            IndicatorSizeExpression = null;
+
+            BaseOffsetXExpression?.Dispose();
+            BaseOffsetXExpression = null;
+
+            PropertySetWidthExpression?.Dispose();
+            PropertySetWidthExpression = null;
+
+            PropertySetOffsetXExpression?.Dispose();
+            PropertySetOffsetXExpression = null;
+
+        }
+
+
+        private void OnSelectionChanged(object sender, Windows.UI.Xaml.Controls.SelectionChangedEventArgs e)
+        {
+            var oldIndex = -1;
+            var newIndex = -1;
+            if (e.RemovedItems.FirstOrDefault() is object oldItem)
+            {
+                if (ContainerFromItem(oldItem) is DependencyObject oldContainer)
+                {
+                    oldIndex = IndexFromContainer(oldContainer);
+                }
+            }
+            if (e.AddedItems.FirstOrDefault() is object newItem)
+            {
+                if (ContainerFromItem(newItem) is DependencyObject newContainer)
+                {
+                    newIndex = IndexFromContainer(newContainer);
+                }
+            }
+
+            InnerSelectionChanged?.Invoke(this, new SelectionChangedEventArgs() { NewIndex = newIndex, OldIndex = oldIndex });
         }
 
         private void OnSizeChanged(object sender, SizeChangedEventArgs e)
@@ -381,5 +450,23 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
             }));
 
         #endregion Dependency Property
+
+        #region Custom Events
+
+        private event SelectionChangedEventHandler InnerSelectionChanged;
+
+        event SelectionChangedEventHandler ITabHeader.SelectionChanged
+        {
+            add
+            {
+                InnerSelectionChanged += value;
+            }
+            remove
+            {
+                InnerSelectionChanged -= value;
+            }
+        }
+
+        #endregion Events
     }
 }

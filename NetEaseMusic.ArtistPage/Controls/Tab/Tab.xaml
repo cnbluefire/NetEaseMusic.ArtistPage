@@ -33,10 +33,19 @@
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
-                        <local:TabHeaderView x:Name="TabsHeaderView" 
-                                              HorizontalAlignment="Center" 
-                                              ItemTemplate="{TemplateBinding HeaderTemplate}"
-                                              IndicatorColor="{TemplateBinding IndicatorColor}"/>
+                        <Grid x:Name="HeaderRoot">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                        <local:TabHeaderView x:Name="TabsHeaderView" Grid.Column="1"
+                                             HorizontalAlignment="Center" 
+                                             ItemTemplate="{TemplateBinding HeaderTemplate}"
+                                             IndicatorColor="{TemplateBinding IndicatorColor}" />
+                            <ContentPresenter x:Name="LeftHeader" Content="{TemplateBinding LeftHeader}" ContentTemplate="{TemplateBinding LeftHeaderTemplate}" />
+                            <ContentPresenter x:Name="RightHeader" Grid.Column="2" Content="{TemplateBinding RightHeader}" ContentTemplate="{TemplateBinding RightHeaderTemplate}" />
+                        </Grid>
                         <ScrollViewer x:Name="ScrollViewer" Grid.Row="1"
                                       VerticalSnapPointsType="Mandatory"
                                       HorizontalSnapPointsType="Mandatory"

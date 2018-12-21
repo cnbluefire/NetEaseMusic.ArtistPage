@@ -15,7 +15,7 @@ using Windows.UI.Xaml.Media;
 namespace NetEaseMusic.ArtistPage.Controls.Tab
 {
     [ContentProperty(Name = "Content")]
-    public sealed class TabItem : ContentControl
+    public sealed class TabItem : ContentControl, ITabItem
     {
         public TabItem()
         {
@@ -24,7 +24,7 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
 
         private bool lazyLoaded = false;
 
-        private void LazyLoad()
+        void ITabItem.LazyLoad()
         {
             if (lazyLoaded) return;
             lazyLoaded = true;
@@ -42,7 +42,7 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
             {
                 if (a.NewValue != a.OldValue)
                 {
-                    if (s is TabItem sender)
+                    if (s is ITabItem sender)
                     {
                         if (a.NewValue is true)
                         {
@@ -52,9 +52,7 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
                 }
             }));
 
-
-
-
+        
         public object Header
         {
             get { return (object)GetValue(HeaderProperty); }
