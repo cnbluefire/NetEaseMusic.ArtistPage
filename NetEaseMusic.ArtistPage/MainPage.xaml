@@ -10,23 +10,46 @@
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
     <Grid>
-        <tab:Tab SelectedIndex="2">
+        <tab:Tab>
             <tab:TabItem Header="TestScroll">
                 <ScrollViewer HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                    <Rectangle HorizontalAlignment="Stretch" Height="1000" Fill="Red" Loaded="Rectangle_Loaded" />
+                    <StackPanel>
+                        <Rectangle HorizontalAlignment="Stretch" Height="150" Fill="#C62828"/>
+                        <Rectangle HorizontalAlignment="Stretch" Height="150" Fill="#AD1457"/>
+                        <Rectangle HorizontalAlignment="Stretch" Height="150" Fill="#6A1B9A"/>
+                        <Rectangle HorizontalAlignment="Stretch" Height="150" Fill="#4527A0"/>
+                        <Rectangle HorizontalAlignment="Stretch" Height="150" Fill="#283593"/>
+                        <Rectangle HorizontalAlignment="Stretch" Height="150" Fill="#1565C0"/>
+                        <Rectangle HorizontalAlignment="Stretch" Height="150" Fill="#0277BD"/>
+                        <Rectangle HorizontalAlignment="Stretch" Height="150" Fill="#00838F"/>
+                        <Rectangle HorizontalAlignment="Stretch" Height="150" Fill="#00695C"/>
+                        <Rectangle HorizontalAlignment="Stretch" Height="150" Fill="#2E7D32"/>
+                        <Rectangle HorizontalAlignment="Stretch" Height="150" Fill="#558B2F"/>
+                        <Rectangle HorizontalAlignment="Stretch" Height="150" Fill="#9E9D24"/>
+                        <Rectangle HorizontalAlignment="Stretch" Height="150" Fill="#F9A825"/>
+                        <Rectangle HorizontalAlignment="Stretch" Height="150" Fill="#FF8F00"/>
+                        <Rectangle HorizontalAlignment="Stretch" Height="150" Fill="#EF6C00"/>
+                        <Rectangle HorizontalAlignment="Stretch" Height="150" Fill="#D84315"/>
+                        <Rectangle HorizontalAlignment="Stretch" Height="150" Fill="#4E342E"/>
+                        <Rectangle HorizontalAlignment="Stretch" Height="150" Fill="#424242"/>
+                        <Rectangle HorizontalAlignment="Stretch" Height="150" Fill="#37474F"/>
+                    </StackPanel>
                 </ScrollViewer>
             </tab:TabItem>
             <tab:TabItem Header="Red">
-                <Rectangle HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Fill="Red" Loaded="Rectangle_Loaded" />
+                <Rectangle HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Fill="#ff5252" Loaded="Rectangle_Loaded" />
             </tab:TabItem>
-            <tab:TabItem Header="GreenGreenGreen">
-                <Rectangle HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Fill="Green"  Loaded="Rectangle_Loaded"/>
+            <tab:TabItem Header="Green">
+                <Rectangle HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Fill="#1b5e20"  Loaded="Rectangle_Loaded"/>
+            </tab:TabItem>
+            <tab:TabItem Header="Brown With Long Title">
+                <Rectangle HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Fill="#5D4037"  Loaded="Rectangle_Loaded"/>
             </tab:TabItem>
             <tab:TabItem Header="Blue">
-                <Rectangle HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Fill="Blue" Loaded="Rectangle_Loaded"/>
+                <Rectangle HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Fill="#0d47a1" Loaded="Rectangle_Loaded"/>
             </tab:TabItem>
             <tab:TabItem Header="Yellow">
-                <Rectangle HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Fill="Yellow" Loaded="Rectangle_Loaded"/>
+                <Rectangle HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Fill="#fdd835" Loaded="Rectangle_Loaded"/>
             </tab:TabItem>
         </tab:Tab>
     </Grid>

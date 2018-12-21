@@ -294,11 +294,36 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
             set { SetValue(SelectedIndexProperty, value); }
         }
 
-        public static readonly DependencyProperty IndicatorColorProperty =
-            DependencyProperty.Register("IndicatorColor", typeof(Color), typeof(Tab), new PropertyMetadata(null));
 
-        public static readonly DependencyProperty HeaderTemplateProperty =
-            DependencyProperty.Register("HeaderTemplate", typeof(DataTemplate), typeof(Tab), new PropertyMetadata(null));
+
+        public object LeftHeader
+        {
+            get { return (object)GetValue(LeftHeaderProperty); }
+            set { SetValue(LeftHeaderProperty, value); }
+        }
+
+        public static readonly DependencyProperty LeftHeaderProperty =
+            DependencyProperty.Register("LeftHeader", typeof(object), typeof(Tab), new PropertyMetadata(null));
+
+
+        public object RightHeader
+        {
+            get { return (object)GetValue(RightHeaderProperty); }
+            set { SetValue(RightHeaderProperty, value); }
+        }
+
+        public DataTemplate LeftHeaderTemplate
+        {
+            get { return (DataTemplate)GetValue(LeftHeaderTemplateProperty); }
+            set { SetValue(LeftHeaderTemplateProperty, value); }
+        }
+
+        public DataTemplate RightHeaderTemplate
+        {
+            get { return (DataTemplate)GetValue(RightHeaderTemplateProperty); }
+            set { SetValue(RightHeaderTemplateProperty, value); }
+        }
+
 
         public static readonly DependencyProperty SelectedItemProperty =
             DependencyProperty.Register("SelectedItem", typeof(object), typeof(Tab), new PropertyMetadata(null, (s, a) =>
@@ -329,6 +354,22 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
                     }
                 }
             }));
+
+
+        public static readonly DependencyProperty RightHeaderProperty =
+            DependencyProperty.Register("RightHeader", typeof(object), typeof(Tab), new PropertyMetadata(null));
+        
+        public static readonly DependencyProperty LeftHeaderTemplateProperty =
+            DependencyProperty.Register("LeftHeaderTemplate", typeof(DataTemplate), typeof(Tab), new PropertyMetadata(null));
+        
+        public static readonly DependencyProperty RightHeaderTemplateProperty =
+            DependencyProperty.Register("RightHeaderTemplate", typeof(DataTemplate), typeof(Tab), new PropertyMetadata(null));
+        
+        public static readonly DependencyProperty IndicatorColorProperty =
+            DependencyProperty.Register("IndicatorColor", typeof(Color), typeof(Tab), new PropertyMetadata(null));
+
+        public static readonly DependencyProperty HeaderTemplateProperty =
+            DependencyProperty.Register("HeaderTemplate", typeof(DataTemplate), typeof(Tab), new PropertyMetadata(null));
 
         #endregion Dependency Properties
 
