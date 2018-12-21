@@ -37,7 +37,7 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
         CancellationTokenSource SizeChangedToken;
 
         ScrollViewer ScrollViewer;
-        TabHeaderView TabsHeaderView;
+        ITabHeader TabHeader;
 
         CompositionPropertySet ScrollPropertySet;
 
@@ -51,16 +51,22 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
             base.OnApplyTemplate();
 
             ScrollViewer = GetTemplateChild("ScrollViewer") as ScrollViewer;
-            TabsHeaderView = GetTemplateChild("TabsHeaderView") as TabHeaderView;
+            TabHeader = GetTemplateChild("TabsHeaderView") as ITabHeader;
 
-            TabsHeaderView.SelectionChanged += OnHeaderSelectionChanged;
+            if (TabHeader != null)
+            {
+                TabHeader.SelectionChanged += OnHeaderSelectionChanged;
+            }
+            if (ScrollViewer != null)
+            {
+                ScrollViewer.DirectManipulationStarted += OnDirectManipulationStarted;
+                ScrollViewer.DirectManipulationCompleted += OnDirectManipulationCompleted;
+                ScrollViewer.ViewChanging += OnViewChanging;
+            }
 
             this.SizeChanged += OnSizeChanged;
-            ScrollViewer.DirectManipulationStarted += OnDirectManipulationStarted;
-            ScrollViewer.DirectManipulationCompleted += OnDirectManipulationCompleted;
-            ScrollViewer.ViewChanging += OnViewChanging;
 
-            SetupComposition();
+            TrySetupComposition();
         }
 
         protected override DependencyObject GetContainerForItemOverride()
@@ -83,10 +89,13 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
             return (int)Math.Round(ScrollViewer.HorizontalOffset / ScrollViewer.ActualWidth);
         }
 
-        private void SetupComposition()
+        private void TrySetupComposition()
         {
-            ScrollPropertySet = ElementCompositionPreview.GetScrollViewerManipulationPropertySet(ScrollViewer);
-            ((ITabHeader)TabsHeaderView).SetTabsRootScrollPropertySet(ScrollPropertySet);
+            if (TabHeader != null)
+            {
+                ScrollPropertySet = ElementCompositionPreview.GetScrollViewerManipulationPropertySet(ScrollViewer);
+                TabHeader.SetTabsRootScrollPropertySet(ScrollPropertySet);
+            }
         }
 
         private void SyncSelectedIndex(int Index, bool disableAnimation = false)
@@ -119,17 +128,17 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
                     newTabsItem.Selected = true;
                     SelectedIndex = NewIndex;
                     SelectedItem = NewIndex;
-                    TabsHeaderView.SelectedIndex = NewIndex;
-                    OnTabsSelectionChanged(NewIndex, OldIndex);
+                    TabHeader.SelectedIndex = NewIndex;
+                    OnSelectionChanged(NewIndex, OldIndex);
                 }
                 else
                 {
-                    OnTabsSelectionChanged(-1, OldIndex);
+                    OnSelectionChanged(-1, OldIndex);
                 }
             }
             else
             {
-                OnTabsSelectionChanged(-1, OldIndex);
+                OnSelectionChanged(-1, OldIndex);
             }
         }
 
@@ -144,15 +153,15 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
 
         private void OnHeaderSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            SyncSelectedIndex(TabsHeaderView.SelectedIndex);
-            UpdateSelectedIndex(TabsHeaderView.SelectedIndex, SelectedIndex);
+            SyncSelectedIndex(e.NewIndex);
+            UpdateSelectedIndex(e.NewIndex,e.OldIndex);
         }
 
         private void OnLoaded(object sender, RoutedEventArgs e)
         {
             foreach (var header in Items.Select(c => (ContainerFromItem(c) as TabItem)?.Header))
             {
-                TabsHeaderView.Items.Add(header);
+                TabHeader.Items.Add(header);
             }
             if (Items.Count > 0)
             {
@@ -168,7 +177,7 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
             _IsLoaded = true;
             UpdateSelectedIndex(SelectedIndex, -1);
             SyncSelectedIndex(SelectedIndex, true);
-            ((ITabHeader)TabsHeaderView).OnTabsLoaded();
+            TabHeader.OnTabsLoaded();
         }
 
         private void OnViewChanging(object sender, ScrollViewerViewChangingEventArgs e)
@@ -177,7 +186,7 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
 
             if (NowScrollIndex != tmp)
             {
-                ((ITabHeader)TabsHeaderView).SyncSelection(tmp);
+                TabHeader.SyncSelection(tmp);
             }
             NowScrollIndex = tmp;
         }
@@ -203,7 +212,7 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
                     tabsItem.Width = ScrollViewer.ActualWidth;
                 }
             }
-            ((ITabHeader)TabsHeaderView).SetTabsWidth(e.NewSize.Width);
+            TabHeader.SetTabsWidth(e.NewSize.Width);
 
             SizeChangedToken?.Cancel();
             SizeChangedToken = new CancellationTokenSource();
@@ -281,18 +290,18 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
 
         #region Custom Events
 
-        public event TabsSelectionChangedEvent TabsSelectionChanged;
-        private void OnTabsSelectionChanged(int NewIndex, int OldIndex)
+        public event TabSelectionChangedEvent SelectionChanged;
+        private void OnSelectionChanged(int NewIndex, int OldIndex)
         {
-            TabsSelectionChanged?.Invoke(this, new TabsSelectionChangedEventArgs() { NewIndex = NewIndex, OldIndex = OldIndex });
+            SelectionChanged?.Invoke(this, new TabSelectionChangedEventArgs() { NewIndex = NewIndex, OldIndex = OldIndex });
         }
 
         #endregion Custom Events
     }
 
-    public delegate void TabsSelectionChangedEvent(Tab sender, TabsSelectionChangedEventArgs args);
+    public delegate void TabSelectionChangedEvent(Tab sender, TabSelectionChangedEventArgs args);
 
-    public class TabsSelectionChangedEventArgs : EventArgs
+    public class TabSelectionChangedEventArgs : EventArgs
     {
         public int NewIndex { get; set; }
         public int OldIndex { get; set; }

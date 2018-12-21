@@ -34,9 +34,9 @@
                             <RowDefinition Height="*" />
                         </Grid.RowDefinitions>
                         <local:TabHeaderView x:Name="TabsHeaderView" 
-                                              HorizontalAlignment="Center" 
-                                              ItemTemplate="{TemplateBinding HeaderTemplate}"
-                                              IndicatorColor="{TemplateBinding IndicatorColor}"/>
+                                             HorizontalAlignment="Center" 
+                                             ItemTemplate="{TemplateBinding HeaderTemplate}"
+                                             IndicatorColor="{TemplateBinding IndicatorColor}" />
                         <ScrollViewer x:Name="ScrollViewer" Grid.Row="1"
                                       VerticalSnapPointsType="Mandatory"
                                       HorizontalSnapPointsType="Mandatory"

@@ -96,6 +96,7 @@
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
     <Compile Include="Controls\Tab\ITabHeader.cs" />
+    <Compile Include="Controls\Tab\SelectionChangedEvent.cs" />
     <Compile Include="Controls\Tab\Tab.cs" />
     <Compile Include="Controls\Tab\TabHeaderItem.cs" />
     <Compile Include="Controls\Tab\TabHeaderView.cs" />

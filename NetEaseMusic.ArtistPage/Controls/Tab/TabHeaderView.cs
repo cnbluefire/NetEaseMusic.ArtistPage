@@ -20,7 +20,9 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
         {
             this.DefaultStyleKey = typeof(TabHeaderView);
             this.Loaded += OnLoaded;
+            this.SelectionChanged += OnSelectionChanged;
         }
+
 
         #region Field
 
@@ -273,6 +275,28 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
             }
         }
 
+        private void OnSelectionChanged(object sender, Windows.UI.Xaml.Controls.SelectionChangedEventArgs e)
+        {
+            var oldIndex = -1;
+            var newIndex = -1;
+            if (e.RemovedItems.FirstOrDefault() is object oldItem)
+            {
+                if (ContainerFromItem(oldItem) is DependencyObject oldContainer)
+                {
+                    oldIndex = IndexFromContainer(oldContainer);
+                }
+            }
+            if (e.AddedItems.FirstOrDefault() is object newItem)
+            {
+                if (ContainerFromItem(newItem) is DependencyObject newContainer)
+                {
+                    newIndex = IndexFromContainer(newContainer);
+                }
+            }
+
+            InnerSelectionChanged?.Invoke(this, new SelectionChangedEventArgs() { NewIndex = newIndex, OldIndex = oldIndex });
+        }
+
         private void OnSizeChanged(object sender, SizeChangedEventArgs e)
         {
             UpdateContainerWidths();
@@ -307,5 +331,23 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
                 }
             }));
         #endregion Dependency Property
+
+        #region Events
+
+        private event SelectionChangedEventHandler InnerSelectionChanged;
+
+        event SelectionChangedEventHandler ITabHeader.SelectionChanged
+        {
+            add
+            {
+                InnerSelectionChanged += value;
+            }
+            remove
+            {
+                InnerSelectionChanged -= value;
+            }
+        }
+
+        #endregion Events
     }
 }
