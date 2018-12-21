@@ -43,7 +43,7 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
         CompositionPropertySet ScrollPropertySet;
 
         int NowScrollIndex = -1;
-        int NextContainerIndex = -1;
+        int LastActiveIndex = -1;
 
         #endregion Field
 
@@ -66,7 +66,7 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
                 ScrollViewer.DirectManipulationCompleted += OnDirectManipulationCompleted;
                 ScrollViewer.ViewChanging += OnViewChanging;
 
-                OnPointerWheel = (s,a) => ItemsPanelRoot?.CancelDirectManipulations();
+                OnPointerWheel = (s, a) => ItemsPanelRoot?.CancelDirectManipulations();
 
                 ScrollViewer.AddHandler(PointerWheelChangedEvent, OnPointerWheel, true);
             }
@@ -158,11 +158,14 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
         {
             if (_IsLoaded && Index > -1 && Index < Items.Count)
             {
+                if (Index == LastActiveIndex) return;
                 var newContainer = ContainerFromIndex(Index);
                 if (newContainer is TabItem newTabsItem)
                 {
                     newTabsItem.Selected = true;
                 }
+                TabHeader.SyncSelection(Index);
+                LastActiveIndex = Index;
             }
         }
 
@@ -211,27 +214,20 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
 
         private void OnViewChanging(object sender, ScrollViewerViewChangingEventArgs e)
         {
-            var tmp = (int)(e.NextView.HorizontalOffset / ScrollViewer.ActualWidth);
-
-            if (NowScrollIndex != tmp)
+            if (_IsLoaded)
             {
-                TabHeader.SyncSelection(tmp);
+                var tmp = (int)(e.NextView.HorizontalOffset / ScrollViewer.ActualWidth);
+
+                if (tmp != NowScrollIndex)//显示左侧
+                {
+                    ActiveContainer(tmp);
+                }
+                else if (tmp + 1 != NowScrollIndex) //显示右侧
+                {
+                    ActiveContainer(tmp + 1);
+                }
                 NowScrollIndex = tmp;
             }
-
-            if (NextContainerIndex != NowScrollIndex)
-            {
-                if (e.NextView.HorizontalOffset != ScrollViewer.ActualWidth * tmp)
-                {
-                    ActiveContainer(NowScrollIndex);
-                    ActiveContainer(NowScrollIndex + 1);
-                    if (_IsLoaded)
-                    {
-                        NextContainerIndex = NowScrollIndex;
-                    }
-                }
-            }
-
         }
 
         private void OnDirectManipulationStarted(object sender, object e)
@@ -324,6 +320,18 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
             set { SetValue(RightHeaderTemplateProperty, value); }
         }
 
+        public double IndicatorWidth
+        {
+            get { return (double)GetValue(IndicatorWidthProperty); }
+            set { SetValue(IndicatorWidthProperty, value); }
+        }
+
+        public double IndicatorHeight
+        {
+            get { return (double)GetValue(IndicatorHeightProperty); }
+            set { SetValue(IndicatorHeightProperty, value); }
+        }
+
 
         public static readonly DependencyProperty SelectedItemProperty =
             DependencyProperty.Register("SelectedItem", typeof(object), typeof(Tab), new PropertyMetadata(null, (s, a) =>
@@ -355,21 +363,37 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
                 }
             }));
 
+        public bool SingleSelectionFollowsFocus
+        {
+            get { return (bool)GetValue(SingleSelectionFollowsFocusProperty); }
+            set { SetValue(SingleSelectionFollowsFocusProperty, value); }
+        }
 
         public static readonly DependencyProperty RightHeaderProperty =
             DependencyProperty.Register("RightHeader", typeof(object), typeof(Tab), new PropertyMetadata(null));
-        
+
         public static readonly DependencyProperty LeftHeaderTemplateProperty =
             DependencyProperty.Register("LeftHeaderTemplate", typeof(DataTemplate), typeof(Tab), new PropertyMetadata(null));
-        
+
         public static readonly DependencyProperty RightHeaderTemplateProperty =
             DependencyProperty.Register("RightHeaderTemplate", typeof(DataTemplate), typeof(Tab), new PropertyMetadata(null));
-        
+
         public static readonly DependencyProperty IndicatorColorProperty =
             DependencyProperty.Register("IndicatorColor", typeof(Color), typeof(Tab), new PropertyMetadata(null));
 
         public static readonly DependencyProperty HeaderTemplateProperty =
             DependencyProperty.Register("HeaderTemplate", typeof(DataTemplate), typeof(Tab), new PropertyMetadata(null));
+
+        public static readonly DependencyProperty IndicatorWidthProperty =
+            DependencyProperty.Register("IndicatorWidth", typeof(double), typeof(Tab), new PropertyMetadata(0d));
+
+        public static readonly DependencyProperty IndicatorHeightProperty =
+            DependencyProperty.Register("IndicatorHeight", typeof(double), typeof(Tab), new PropertyMetadata(0d));
+
+        public static readonly DependencyProperty SingleSelectionFollowsFocusProperty =
+            DependencyProperty.Register("SingleSelectionFollowsFocus", typeof(bool), typeof(Tab), new PropertyMetadata(true));
+
+
 
         #endregion Dependency Properties
 

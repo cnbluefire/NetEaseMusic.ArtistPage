@@ -13,7 +13,9 @@
         <Setter Property="ScrollViewer.IsVerticalScrollChainingEnabled" Value="True" />
         <Setter Property="ScrollViewer.IsDeferredScrollingEnabled" Value="False" />
         <Setter Property="ScrollViewer.BringIntoViewOnFocusChange" Value="True" />
+        <Setter Property="TabNavigation" Value="Once" />
         <Setter Property="UseSystemFocusVisuals" Value="True" />
+        <Setter Property="SingleSelectionFollowsFocus" Value="True" />
         <Setter Property="IndicatorColor" Value="Red" />
         <Setter Property="ItemsPanel">
             <Setter.Value>
@@ -41,8 +43,11 @@
                             </Grid.ColumnDefinitions>
                         <local:TabHeaderView x:Name="TabsHeaderView" Grid.Column="1"
                                              HorizontalAlignment="Center" 
+                                             UseSystemFocusVisuals="False" SingleSelectionFollowsFocus="{TemplateBinding SingleSelectionFollowsFocus}"
                                              ItemTemplate="{TemplateBinding HeaderTemplate}"
-                                             IndicatorColor="{TemplateBinding IndicatorColor}" />
+                                             IndicatorColor="{TemplateBinding IndicatorColor}"
+                                             IndicatorHeight="{TemplateBinding IndicatorHeight}"
+                                             IndicatorWidth="{TemplateBinding IndicatorWidth}"/>
                             <ContentPresenter x:Name="LeftHeader" Content="{TemplateBinding LeftHeader}" ContentTemplate="{TemplateBinding LeftHeaderTemplate}" />
                             <ContentPresenter x:Name="RightHeader" Grid.Column="2" Content="{TemplateBinding RightHeader}" ContentTemplate="{TemplateBinding RightHeaderTemplate}" />
                         </Grid>

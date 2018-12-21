@@ -10,8 +10,8 @@
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
     <Grid>
-        <tab:Tab SelectedIndex="1">
-            <tab:TabItem Header="TestScroll">
+        <tab:Tab SelectedIndex="1" >
+            <tab:TabItem Header="Test Scroll">
                 <ScrollViewer HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                     <StackPanel>
                         <StackPanel.ChildrenTransitions>
