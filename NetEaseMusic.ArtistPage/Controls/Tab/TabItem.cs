@@ -52,9 +52,7 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
                 }
             }));
 
-
-
-
+        
         public object Header
         {
             get { return (object)GetValue(HeaderProperty); }

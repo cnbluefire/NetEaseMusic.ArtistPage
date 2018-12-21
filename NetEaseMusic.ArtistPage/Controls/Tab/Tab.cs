@@ -28,6 +28,7 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
         {
             this.DefaultStyleKey = typeof(Tab);
             this.Loaded += OnLoaded;
+            this.Unloaded += OnUnloaded;
         }
 
         #region Field
@@ -35,7 +36,7 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
         private bool _IsLoaded;
 
         CancellationTokenSource SizeChangedToken;
-
+        PointerEventHandler OnPointerWheel;
         ScrollViewer ScrollViewer;
         ITabHeader TabHeader;
 
@@ -64,6 +65,10 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
                 ScrollViewer.DirectManipulationStarted += OnDirectManipulationStarted;
                 ScrollViewer.DirectManipulationCompleted += OnDirectManipulationCompleted;
                 ScrollViewer.ViewChanging += OnViewChanging;
+
+                OnPointerWheel = (s,a) => ItemsPanelRoot?.CancelDirectManipulations();
+
+                ScrollViewer.AddHandler(PointerWheelChangedEvent, OnPointerWheel, true);
             }
 
             this.SizeChanged += OnSizeChanged;
@@ -196,6 +201,14 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
             ActiveContainer(SelectedIndex);
         }
 
+        private void OnUnloaded(object sender, RoutedEventArgs e)
+        {
+            _IsLoaded = false;
+            ScrollPropertySet.Dispose();
+            ScrollPropertySet = null;
+            ScrollViewer.RemoveHandler(PointerWheelChangedEvent, OnPointerWheel);
+        }
+
         private void OnViewChanging(object sender, ScrollViewerViewChangingEventArgs e)
         {
             var tmp = (int)(e.NextView.HorizontalOffset / ScrollViewer.ActualWidth);
@@ -240,6 +253,7 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
                 if (ContainerFromItem(item) is TabItem tabsItem)
                 {
                     tabsItem.Width = ScrollViewer.ActualWidth;
+                    tabsItem.Height = ScrollViewer.ActualHeight;
                 }
             }
             TabHeader.SetTabsWidth(e.NewSize.Width);

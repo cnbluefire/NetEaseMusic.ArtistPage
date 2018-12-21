@@ -11,6 +11,11 @@
 
     <Grid>
         <tab:Tab SelectedIndex="2">
+            <tab:TabItem Header="TestScroll">
+                <ScrollViewer HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                    <Rectangle HorizontalAlignment="Stretch" Height="1000" Fill="Red" Loaded="Rectangle_Loaded" />
+                </ScrollViewer>
+            </tab:TabItem>
             <tab:TabItem Header="Red">
                 <Rectangle HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Fill="Red" Loaded="Rectangle_Loaded" />
             </tab:TabItem>
