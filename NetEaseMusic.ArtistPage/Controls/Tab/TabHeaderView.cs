@@ -332,7 +332,7 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
             }));
         #endregion Dependency Property
 
-        #region Events
+        #region Custom Events
 
         private event SelectionChangedEventHandler InnerSelectionChanged;
 

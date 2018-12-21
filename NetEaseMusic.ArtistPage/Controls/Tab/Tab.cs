@@ -42,6 +42,8 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
         CompositionPropertySet ScrollPropertySet;
 
         int NowScrollIndex = -1;
+        int NextContainerIndex = -1;
+
         #endregion Field
 
         #region Overrides
@@ -125,7 +127,7 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
                 var newContainer = ContainerFromIndex(NewIndex);
                 if (newContainer is TabItem newTabsItem)
                 {
-                    newTabsItem.Selected = true;
+                    ActiveContainer(NewIndex);
                     SelectedIndex = NewIndex;
                     SelectedItem = NewIndex;
                     TabHeader.SelectedIndex = NewIndex;
@@ -147,14 +149,26 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
             UpdateSelectedIndex(Items.IndexOf(NewItem), Items.IndexOf(OldItem));
         }
 
+        private void ActiveContainer(int Index)
+        {
+            if (_IsLoaded && Index > -1 && Index < Items.Count)
+            {
+                var newContainer = ContainerFromIndex(Index);
+                if (newContainer is TabItem newTabsItem)
+                {
+                    newTabsItem.Selected = true;
+                }
+            }
+        }
+
         #endregion Private Methods
 
-        #region Events
+        #region Events Methods
 
         private void OnHeaderSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             SyncSelectedIndex(e.NewIndex);
-            UpdateSelectedIndex(e.NewIndex,e.OldIndex);
+            UpdateSelectedIndex(e.NewIndex, e.OldIndex);
         }
 
         private void OnLoaded(object sender, RoutedEventArgs e)
@@ -174,21 +188,37 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
                     UpdateSelectedIndex(SelectedIndex, -1);
                 }
             }
-            _IsLoaded = true;
+
             UpdateSelectedIndex(SelectedIndex, -1);
             SyncSelectedIndex(SelectedIndex, true);
             TabHeader.OnTabsLoaded();
+            _IsLoaded = true;
+            ActiveContainer(SelectedIndex);
         }
 
         private void OnViewChanging(object sender, ScrollViewerViewChangingEventArgs e)
         {
-            var tmp = (int)((e.NextView.HorizontalOffset) / ScrollViewer.ActualWidth);
+            var tmp = (int)(e.NextView.HorizontalOffset / ScrollViewer.ActualWidth);
 
             if (NowScrollIndex != tmp)
             {
                 TabHeader.SyncSelection(tmp);
+                NowScrollIndex = tmp;
             }
-            NowScrollIndex = tmp;
+
+            if (NextContainerIndex != NowScrollIndex)
+            {
+                if (e.NextView.HorizontalOffset != ScrollViewer.ActualWidth * tmp)
+                {
+                    ActiveContainer(NowScrollIndex);
+                    ActiveContainer(NowScrollIndex + 1);
+                    if (_IsLoaded)
+                    {
+                        NextContainerIndex = NowScrollIndex;
+                    }
+                }
+            }
+
         }
 
         private void OnDirectManipulationStarted(object sender, object e)
@@ -222,7 +252,7 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
                         () => SyncSelectedIndex(SelectedIndex, true)));
         }
 
-        #endregion Events
+        #endregion Events Methods
 
         #region Dependency Properties
 
