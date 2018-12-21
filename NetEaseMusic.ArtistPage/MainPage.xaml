@@ -10,10 +10,15 @@
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
     <Grid>
-        <tab:Tab>
+        <tab:Tab SelectedIndex="1">
             <tab:TabItem Header="TestScroll">
                 <ScrollViewer HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                     <StackPanel>
+                        <StackPanel.ChildrenTransitions>
+                            <TransitionCollection>
+                                <EntranceThemeTransition IsStaggeringEnabled="True"/>
+                            </TransitionCollection>
+                        </StackPanel.ChildrenTransitions>
                         <Rectangle HorizontalAlignment="Stretch" Height="150" Fill="#C62828"/>
                         <Rectangle HorizontalAlignment="Stretch" Height="150" Fill="#AD1457"/>
                         <Rectangle HorizontalAlignment="Stretch" Height="150" Fill="#6A1B9A"/>
