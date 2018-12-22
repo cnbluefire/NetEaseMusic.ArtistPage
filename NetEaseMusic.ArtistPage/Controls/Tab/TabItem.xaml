@@ -6,34 +6,40 @@
         <Setter Property="HorizontalContentAlignment" Value="Stretch" />
         <Setter Property="VerticalContentAlignment" Value="Stretch" />
         <Setter Property="TabNavigation" Value="Local" />
+        <Setter Property="UnloadItemOutsideViewport" Value="False" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="local:TabItem">
-                    <ContentPresenter x:Name="ContentPresenter"
-                                      Content="{TemplateBinding Content}"
-                                      Background="{TemplateBinding Background}"
-                                      BorderBrush="{TemplateBinding BorderBrush}"
-                                      BorderThickness="{TemplateBinding BorderThickness}"
-                                      ContentTransitions="{TemplateBinding ContentTransitions}"
-                                      ContentTemplate="{TemplateBinding ContentTemplate}"
-                                      Padding="{TemplateBinding Padding}"
-                                      HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                      VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}"
-                                      Visibility="Collapsed" Opacity="0">
+                    <Border x:Name="LayoutRoot"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            Padding="{TemplateBinding Padding}" Opacity="1">
                         <VisualStateManager.VisualStateGroups>
-                            <VisualStateGroup x:Name="LazyLoadStates">
+                            <VisualStateGroup x:Name="LoadStates">
+                                <VisualStateGroup.Transitions>
+                                    <VisualTransition From="Load" To="Normal">
+                                        <!--<Storyboard>
+                                            <DoubleAnimation Storyboard.TargetName="LayoutRoot" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.23" />
+                                        </Storyboard>-->
+                                    </VisualTransition>
+                                </VisualStateGroup.Transitions>
                                 <VisualState x:Name="Normal" />
                                 <VisualState x:Name="Load">
-                                    <Storyboard>
-                                        <DoubleAnimation Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.23" />
-                                        <ObjectAnimationUsingKeyFrames Storyboard.TargetName="ContentPresenter" Storyboard.TargetProperty="Visibility" Duration="0">
-                                            <DiscreteObjectKeyFrame KeyTime="0" Value="Visible" />
-                                        </ObjectAnimationUsingKeyFrames>
-                                    </Storyboard>
+                                    <!--<Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="LayoutRoot" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.23" />
+                                    </Storyboard>-->
                                 </VisualState>
                             </VisualStateGroup>
                         </VisualStateManager.VisualStateGroups>
-                    </ContentPresenter>
+                        <ContentPresenter x:Name="ContentPresenter" x:Load="False"
+                                      Content="{TemplateBinding Content}"
+                                      ContentTransitions="{TemplateBinding ContentTransitions}"
+                                      ContentTemplate="{TemplateBinding ContentTemplate}"
+                                      HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                      VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}">
+                        </ContentPresenter>
+                    </Border>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>

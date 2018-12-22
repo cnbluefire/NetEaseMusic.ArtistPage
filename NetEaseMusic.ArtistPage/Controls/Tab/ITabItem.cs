@@ -8,6 +8,7 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
 {
     public interface ITabItem
     {
-        void LazyLoad();
+        bool UnloadItemOutsideViewport { get; }
+        void UpdateLoadState(bool Load);
     }
 }

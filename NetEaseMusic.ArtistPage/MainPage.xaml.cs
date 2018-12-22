@@ -30,7 +30,7 @@ namespace NetEaseMusic.ArtistPage
 
         private void Rectangle_Loaded(object sender, RoutedEventArgs e)
         {
-            Debug.WriteLine(sender.GetHashCode());
+            Debug.WriteLine(((FrameworkElement)sender).Name);
         }
     }
 }

@@ -22,44 +22,53 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
             this.DefaultStyleKey = typeof(TabItem);
         }
 
-        private bool lazyLoaded = false;
+        ContentPresenter ContentPresenter;
 
-        void ITabItem.LazyLoad()
+        protected override void OnApplyTemplate()
         {
-            if (lazyLoaded) return;
-            lazyLoaded = true;
-            VisualStateManager.GoToState(this, "Load", false);
+            base.OnApplyTemplate();
+
+            ((ITabItem)(this)).UpdateLoadState(false);
         }
 
-        public bool Selected
+        private ContentPresenter GetContentPresenter()
         {
-            get { return (bool)GetValue(SelectedProperty); }
-            set { SetValue(SelectedProperty, value); }
+            return (ContentPresenter = GetTemplateChild("ContentPresenter") as ContentPresenter);
         }
 
-        public static readonly DependencyProperty SelectedProperty =
-            DependencyProperty.Register("Selected", typeof(bool), typeof(TabItem), new PropertyMetadata(false, (s, a) =>
+        void ITabItem.UpdateLoadState(bool Load)
+        {
+            if (Load)
             {
-                if (a.NewValue != a.OldValue)
+                VisualStateManager.GoToState(this, "Load", true);
+                GetContentPresenter();
+            }
+            else
+            {
+                VisualStateManager.GoToState(this, "Normal", true);
+                if (ContentPresenter != null)
                 {
-                    if (s is ITabItem sender)
-                    {
-                        if (a.NewValue is true)
-                        {
-                            sender.LazyLoad();
-                        }
-                    }
+                    XamlMarkupHelper.UnloadObject(ContentPresenter);
+                    ContentPresenter = null;
                 }
-            }));
+            }
+        }
 
-        
+        public bool UnloadItemOutsideViewport
+        {
+            get { return (bool)GetValue(UnloadItemOutsideViewportProperty); }
+            set { SetValue(UnloadItemOutsideViewportProperty, value); }
+        }
+
         public object Header
         {
             get { return (object)GetValue(HeaderProperty); }
             set { SetValue(HeaderProperty, value); }
         }
 
-        // Using a DependencyProperty as the backing store for Header.  This enables animation, styling, binding, etc...
+        public static readonly DependencyProperty UnloadItemOutsideViewportProperty =
+            DependencyProperty.Register("UnloadItemOutsideViewport", typeof(bool), typeof(TabItem), new PropertyMetadata(false));
+
         public static readonly DependencyProperty HeaderProperty =
             DependencyProperty.Register("Header", typeof(object), typeof(TabItem), new PropertyMetadata(null));
 

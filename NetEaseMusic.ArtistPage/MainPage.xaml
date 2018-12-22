@@ -10,7 +10,7 @@
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
 
     <Grid>
-        <tab:Tab SelectedIndex="1" >
+        <tab:Tab SelectedIndex="1">
             <tab:TabItem Header="Test Scroll">
                 <ScrollViewer HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                     <StackPanel>
@@ -41,20 +41,20 @@
                     </StackPanel>
                 </ScrollViewer>
             </tab:TabItem>
-            <tab:TabItem Header="Red">
-                <Rectangle HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Fill="#ff5252" Loaded="Rectangle_Loaded" />
+            <tab:TabItem Header="Red" UnloadItemOutsideViewport="True" >
+                <Rectangle x:Name="Red" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Fill="#ff5252" Loaded="Rectangle_Loaded" />
             </tab:TabItem>
-            <tab:TabItem Header="Green">
-                <Rectangle HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Fill="#1b5e20"  Loaded="Rectangle_Loaded"/>
+            <tab:TabItem Header="Green" UnloadItemOutsideViewport="True">
+                <Rectangle x:Name="Green" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Fill="#1b5e20"  Loaded="Rectangle_Loaded"/>
             </tab:TabItem>
-            <tab:TabItem Header="Brown With Long Title">
-                <Rectangle HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Fill="#5D4037"  Loaded="Rectangle_Loaded"/>
+            <tab:TabItem Header="Brown With Long Title" UnloadItemOutsideViewport="True">
+                <Rectangle x:Name="Brown_With_Long_Title" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Fill="#5D4037"  Loaded="Rectangle_Loaded"/>
             </tab:TabItem>
-            <tab:TabItem Header="Blue">
-                <Rectangle HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Fill="#0d47a1" Loaded="Rectangle_Loaded"/>
+            <tab:TabItem Header="Blue" UnloadItemOutsideViewport="True">
+                <Rectangle x:Name="Blue" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Fill="#0d47a1" Loaded="Rectangle_Loaded"/>
             </tab:TabItem>
-            <tab:TabItem Header="Yellow">
-                <Rectangle HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Fill="#fdd835" Loaded="Rectangle_Loaded"/>
+            <tab:TabItem Header="Yellow" UnloadItemOutsideViewport="True">
+                <Rectangle x:Name="Yellow" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Fill="#fdd835" Loaded="Rectangle_Loaded"/>
             </tab:TabItem>
         </tab:Tab>
     </Grid>

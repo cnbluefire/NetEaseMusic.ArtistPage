@@ -28,25 +28,26 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
 
         private bool _IsLoaded;
         private double _TabsWidth;
+        private int _NowScrollIndex = -1;
 
-        List<double> ContainerWidths = new List<double>();
+        private List<double> ContainerWidths = new List<double>();
 
-        ScrollViewer ScrollViewer;
+        private ScrollViewer ScrollViewer;
 
-        Compositor Compositor => Window.Current.Compositor;
-        CompositionPropertySet ScrollPropertySet;
-        CompositionPropertySet HeaderScrollPropertySet;
-        CompositionPropertySet PropSet;
-        SpriteVisual Indicator;
-        Visual ScrollViewerVisual;
-        ExpressionAnimation Indicator_OffsetExpression;
-        ExpressionAnimation Indicator_SizeExpression;
-        ExpressionAnimation PropertySet_ProgressExpression;
-        ExpressionAnimation PropertySet_ActualWidthExpression;
-        ExpressionAnimation PropertySet_ActualHeightExpression;
-        ExpressionAnimation PropertySet_BaseOffsetXExpression;
-        ExpressionAnimation PropertySet_WidthExpression;
-        ExpressionAnimation PropertySet_OffsetXExpression;
+        private Compositor Compositor => Window.Current.Compositor;
+        private CompositionPropertySet ScrollPropertySet;
+        private CompositionPropertySet HeaderScrollPropertySet;
+        private CompositionPropertySet PropSet;
+        private SpriteVisual Indicator;
+        private Visual ScrollViewerVisual;
+        private ExpressionAnimation Indicator_OffsetExpression;
+        private ExpressionAnimation Indicator_SizeExpression;
+        private ExpressionAnimation PropertySet_ProgressExpression;
+        private ExpressionAnimation PropertySet_ActualWidthExpression;
+        private ExpressionAnimation PropertySet_ActualHeightExpression;
+        private ExpressionAnimation PropertySet_BaseOffsetXExpression;
+        private ExpressionAnimation PropertySet_WidthExpression;
+        private ExpressionAnimation PropertySet_OffsetXExpression;
 
         #endregion Field
 
@@ -98,6 +99,7 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
                     ContainerWidths.Add(0);
                 }
             }
+            SetLeftRightWidth(_NowScrollIndex);
         }
 
         private void TrySetupComposition()
@@ -224,6 +226,7 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
 
         private void SetLeftRightWidth(int Index)
         {
+            if (ContainerWidths.Count == 0) return;
             if (Index > 0)
             {
                 PropSet.InsertScalar("LeftWidth", Convert.ToSingle(ContainerWidths[Index - 1]));
@@ -269,18 +272,20 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
             TrySetupComposition();
         }
 
-        async void ITabHeader.OnTabsLoaded()
+        async Task ITabHeader.OnTabsLoadedAsync()
         {
             if (SelectedIndex > -1)
             {
                 PropSet.InsertScalar("SelectedIndex", SelectedIndex);
             }
-            UpdateContainerWidths();
             await Task.Delay(100);
+            UpdateContainerWidths();
         }
 
         void ITabHeader.SyncSelection(int Index)
         {
+            _NowScrollIndex = Index;
+
             SetLeftRightWidth(Index);
 
             PropSet.InsertScalar("NowOffsetX", Convert.ToSingle(ContainerWidths.Take(Index).Sum()));
