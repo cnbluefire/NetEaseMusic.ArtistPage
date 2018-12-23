@@ -1,9 +1,13 @@
-﻿using System;
+﻿using NetEaseMusic.ArtistPage.Models;
+using NetEaseMusic.ArtistPage.Services;
+using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.UI.Xaml;
@@ -26,11 +30,46 @@ namespace NetEaseMusic.ArtistPage
         public MainPage()
         {
             this.InitializeComponent();
+            songService = new SongService();
+            HotSongs = new ObservableCollection<HotSongModel>();
         }
+
+        SongService songService;
+        ObservableCollection<HotSongModel> HotSongs { get; set; }
 
         private void Rectangle_Loaded(object sender, RoutedEventArgs e)
         {
             Debug.WriteLine(((FrameworkElement)sender).Name);
+        }
+
+        private void ContentBorder_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+
+        }
+
+        private void HeaderGrid_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            ContentBorder.Margin = new Thickness(0, e.NewSize.Height, 0, 0);
+        }
+
+        private void RootGrid_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            ContentBorder.Width = e.NewSize.Width;
+            ContentBorder.Height = e.NewSize.Height;
+        }
+
+        private async Task LoadAsync()
+        {
+            var songs = await songService.GetHotSongList();
+            foreach(var song in songs)
+            {
+                HotSongs.Add(song);
+            }
+        }
+
+        private async void RootGrid_Loaded(object sender, RoutedEventArgs e)
+        {
+            await LoadAsync();
         }
     }
 }

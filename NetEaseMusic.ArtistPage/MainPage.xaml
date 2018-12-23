@@ -7,55 +7,67 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:tab="using:NetEaseMusic.ArtistPage.Controls.Tab"
     mc:Ignorable="d"
+    RequestedTheme="Light"
     Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    <Page.Resources>
+        <Color x:Key="PrimaryColor" >#bc2f2e</Color>
+        <SolidColorBrush x:Key="PrimaryBrush" Color="{StaticResource PrimaryColor}" />
+    </Page.Resources>
+    <Grid x:Name="RootGrid" SizeChanged="RootGrid_SizeChanged" Background="Black" Loaded="RootGrid_Loaded">
+        <Grid x:Name="HeaderGrid" HorizontalAlignment="Stretch" VerticalAlignment="Top" SizeChanged="HeaderGrid_SizeChanged" >
+            <Image x:Name="HeaderImage" HorizontalAlignment="Stretch" VerticalAlignment="Center" Height="150" />
+        </Grid>
+        <ScrollViewer>
 
-    <Grid>
-        <tab:Tab SelectedIndex="1">
-            <tab:TabItem Header="Test Scroll">
-                <ScrollViewer HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
-                    <StackPanel>
-                        <StackPanel.ChildrenTransitions>
-                            <TransitionCollection>
-                                <EntranceThemeTransition IsStaggeringEnabled="True"/>
-                            </TransitionCollection>
-                        </StackPanel.ChildrenTransitions>
-                        <Rectangle HorizontalAlignment="Stretch" Height="150" Fill="#C62828"/>
-                        <Rectangle HorizontalAlignment="Stretch" Height="150" Fill="#AD1457"/>
-                        <Rectangle HorizontalAlignment="Stretch" Height="150" Fill="#6A1B9A"/>
-                        <Rectangle HorizontalAlignment="Stretch" Height="150" Fill="#4527A0"/>
-                        <Rectangle HorizontalAlignment="Stretch" Height="150" Fill="#283593"/>
-                        <Rectangle HorizontalAlignment="Stretch" Height="150" Fill="#1565C0"/>
-                        <Rectangle HorizontalAlignment="Stretch" Height="150" Fill="#0277BD"/>
-                        <Rectangle HorizontalAlignment="Stretch" Height="150" Fill="#00838F"/>
-                        <Rectangle HorizontalAlignment="Stretch" Height="150" Fill="#00695C"/>
-                        <Rectangle HorizontalAlignment="Stretch" Height="150" Fill="#2E7D32"/>
-                        <Rectangle HorizontalAlignment="Stretch" Height="150" Fill="#558B2F"/>
-                        <Rectangle HorizontalAlignment="Stretch" Height="150" Fill="#9E9D24"/>
-                        <Rectangle HorizontalAlignment="Stretch" Height="150" Fill="#F9A825"/>
-                        <Rectangle HorizontalAlignment="Stretch" Height="150" Fill="#FF8F00"/>
-                        <Rectangle HorizontalAlignment="Stretch" Height="150" Fill="#EF6C00"/>
-                        <Rectangle HorizontalAlignment="Stretch" Height="150" Fill="#D84315"/>
-                        <Rectangle HorizontalAlignment="Stretch" Height="150" Fill="#4E342E"/>
-                        <Rectangle HorizontalAlignment="Stretch" Height="150" Fill="#424242"/>
-                        <Rectangle HorizontalAlignment="Stretch" Height="150" Fill="#37474F"/>
-                    </StackPanel>
-                </ScrollViewer>
-            </tab:TabItem>
-            <tab:TabItem Header="Red" UnloadItemOutsideViewport="True" >
-                <Rectangle x:Name="Red" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Fill="#ff5252" Loaded="Rectangle_Loaded" />
-            </tab:TabItem>
-            <tab:TabItem Header="Green" UnloadItemOutsideViewport="True">
-                <Rectangle x:Name="Green" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Fill="#1b5e20"  Loaded="Rectangle_Loaded"/>
-            </tab:TabItem>
-            <tab:TabItem Header="Brown With Long Title" UnloadItemOutsideViewport="True">
-                <Rectangle x:Name="Brown_With_Long_Title" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Fill="#5D4037"  Loaded="Rectangle_Loaded"/>
-            </tab:TabItem>
-            <tab:TabItem Header="Blue" UnloadItemOutsideViewport="True">
-                <Rectangle x:Name="Blue" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Fill="#0d47a1" Loaded="Rectangle_Loaded"/>
-            </tab:TabItem>
-            <tab:TabItem Header="Yellow" UnloadItemOutsideViewport="True">
-                <Rectangle x:Name="Yellow" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Fill="#fdd835" Loaded="Rectangle_Loaded"/>
-            </tab:TabItem>
-        </tab:Tab>
+            <Grid x:Name="ContentBorder" SizeChanged="ContentBorder_SizeChanged">
+                <Rectangle Fill="White" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" RadiusX="10" RadiusY="10" />
+                <tab:Tab IndicatorColor="{StaticResource PrimaryColor}" IndicatorWidth="48">
+                    <tab:TabItem Header="热门演唱">
+                        <ListView x:Name="HotSongList" ItemsSource="{x:Bind HotSongs}">
+                            <ListView.ItemContainerStyle>
+                                <Style TargetType="ListViewItem">
+                                    
+                                </Style>
+                            </ListView.ItemContainerStyle>
+                            <ListView.ItemTemplate>
+                                <DataTemplate>
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding Index}" />
+                                        <TextBlock Text="{Binding Name}" />
+                                        <TextBlock Text="{Binding SubName}" />
+                                        <TextBlock Text="{Binding Album}" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </ListView.ItemTemplate>
+                            <ListView.Header>
+                                <Grid>
+                                    <Button HorizontalAlignment="Right" Background="Transparent" BorderThickness="0" Padding="10">
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <SymbolIcon Symbol="Setting" Foreground="{StaticResource PrimaryBrush}" VerticalAlignment="Center"/>
+                                            <TextBlock Margin="5,0,0,0" VerticalAlignment="Center">管理</TextBlock>
+                                        </StackPanel>
+                                    </Button>
+                                    <Button HorizontalAlignment="Left" Background="Transparent" BorderThickness="0" Padding="10">
+                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                            <SymbolIcon Symbol="Add" Foreground="{StaticResource PrimaryBrush}" VerticalAlignment="Center"/>
+                                            <TextBlock Margin="5,0,0,0" VerticalAlignment="Center">收藏热门50单曲</TextBlock>
+                                        </StackPanel>
+                                    </Button>
+                                </Grid>
+                            </ListView.Header>
+                        </ListView>
+                    </tab:TabItem>
+                    <tab:TabItem Header="专辑">
+
+                    </tab:TabItem>
+                    <tab:TabItem Header="视频">
+
+                    </tab:TabItem>
+                    <tab:TabItem Header="艺人信息">
+
+                    </tab:TabItem>
+                </tab:Tab>
+            </Grid>
+        </ScrollViewer>
     </Grid>
 </Page>

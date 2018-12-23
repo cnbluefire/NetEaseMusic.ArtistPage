@@ -66,7 +66,13 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
                 ScrollViewer.DirectManipulationCompleted += OnDirectManipulationCompleted;
                 ScrollViewer.ViewChanging += OnViewChanging;
 
-                OnPointerWheel = (s, a) => ItemsPanelRoot?.CancelDirectManipulations();
+                OnPointerWheel = (s, a) =>
+                {
+                    if (a.OriginalSource is Grid)
+                    {
+                        ItemsPanelRoot?.CancelDirectManipulations();
+                    }
+                };
 
                 ScrollViewer.AddHandler(PointerWheelChangedEvent, OnPointerWheel, true);
             }
@@ -93,7 +99,7 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
 
         private int CalcIndex()
         {
-            return (int)Math.Round(ScrollViewer.HorizontalOffset / ScrollViewer.ActualWidth);
+            return (int)(ScrollViewer.HorizontalOffset + 2 / ScrollViewer.ActualWidth);
         }
 
         private void TrySetupComposition()
@@ -114,7 +120,8 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
         {
             if (SelectedIndex > -1)
             {
-                (ContainerFromIndex(Index) as ContentControl)?.StartBringIntoView(new BringIntoViewOptions() { AnimationDesired = !(disableAnimation) });
+                ScrollViewer.ChangeView(Index * ScrollViewer.ActualWidth, null, null, disableAnimation);
+                //(ContainerFromIndex(Index) as ContentControl)?.StartBringIntoView(new BringIntoViewOptions() { AnimationDesired = !(disableAnimation) });
             }
             else
             {
@@ -135,7 +142,7 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
                 if (newContainer is ITabItem newTabsItem)
                 {
                     SelectedIndex = NewIndex;
-                    SelectedItem = NewIndex;
+                    SelectedItem = Items[NewIndex];
                     TabHeader.SelectedIndex = NewIndex;
                     OnSelectionChanged(NewIndex, OldIndex);
                 }
@@ -290,7 +297,7 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
             SizeChangedToken?.Cancel();
             SizeChangedToken = new CancellationTokenSource();
             Task.Run(() => Task.Delay(50), SizeChangedToken.Token)
-                .ContinueWith((t) => SyncSelectedIndex(SelectedIndex, true),TaskScheduler.FromCurrentSynchronizationContext());
+                .ContinueWith((t) => SyncSelectedIndex(SelectedIndex, true), TaskScheduler.FromCurrentSynchronizationContext());
         }
 
         #endregion Events Methods
