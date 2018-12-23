@@ -290,9 +290,7 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
             SizeChangedToken?.Cancel();
             SizeChangedToken = new CancellationTokenSource();
             Task.Run(() => Task.Delay(50), SizeChangedToken.Token)
-                .ContinueWith(
-                    async (t) => await this.Dispatcher.RunAsync(Windows.UI.Core.CoreDispatcherPriority.High,
-                        () => SyncSelectedIndex(SelectedIndex, true)));
+                .ContinueWith((t) => SyncSelectedIndex(SelectedIndex, true),TaskScheduler.FromCurrentSynchronizationContext());
         }
 
         #endregion Events Methods
