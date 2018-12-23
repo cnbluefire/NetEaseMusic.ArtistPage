@@ -39,11 +39,6 @@ namespace NetEaseMusic.ArtistPage
         SongService songService;
         ObservableCollection<HotSongModel> HotSongs { get; set; }
 
-        private void Rectangle_Loaded(object sender, RoutedEventArgs e)
-        {
-            Debug.WriteLine(((FrameworkElement)sender).Name);
-        }
-
         private void ContentBorder_SizeChanged(object sender, SizeChangedEventArgs e)
         {
 
@@ -59,6 +54,8 @@ namespace NetEaseMusic.ArtistPage
         {
             ContentGrid.Width = e.NewSize.Width;
             ContentGrid.Height = e.NewSize.Height - InnerHeaderGrid.ActualHeight;
+            HotSongList.Height = e.NewSize.Height - InnerHeaderGrid.ActualHeight;
+            
         }
 
         private async Task LoadAsync()
@@ -71,8 +68,11 @@ namespace NetEaseMusic.ArtistPage
         }
 
         Visual ImageVisual;
+        Visual HeaderVisual;
+        Visual InnerHeaderVisual;
         ExpressionAnimation CenterPointBind;
         ExpressionAnimation ScaleBind;
+        ExpressionAnimation OffsetYBind;
         CompositionPropertySet ScrollPropertySet;
 
         private async void RootGrid_Loaded(object sender, RoutedEventArgs e)
@@ -81,6 +81,9 @@ namespace NetEaseMusic.ArtistPage
 
             ScrollPropertySet = ElementCompositionPreview.GetScrollViewerManipulationPropertySet(ContentScrollViewer);
             ImageVisual = ElementCompositionPreview.GetElementVisual(ImageGrid);
+            HeaderVisual = ElementCompositionPreview.GetElementVisual(HeaderGrid);
+            InnerHeaderVisual = ElementCompositionPreview.GetElementVisual(InnerHeaderGrid);
+
 
             CenterPointBind = ImageVisual.Compositor.CreateExpressionAnimation("Vector3(target.Size.X / 2,target.Size.Y / 2,0)");
             CenterPointBind.SetReferenceParameter("target", ImageVisual);
@@ -90,6 +93,11 @@ namespace NetEaseMusic.ArtistPage
             ScaleBind.SetReferenceParameter("scroll", ScrollPropertySet);
             ImageVisual.StartAnimation("Scale", ScaleBind);
 
+            OffsetYBind = ImageVisual.Compositor.CreateExpressionAnimation("Clamp(scroll.Translation.Y / 2,(innerheader.Size.Y - header.Size.Y) / 2 ,0)");
+            OffsetYBind.SetReferenceParameter("scroll", ScrollPropertySet);
+            OffsetYBind.SetReferenceParameter("header", HeaderVisual);
+            OffsetYBind.SetReferenceParameter("innerheader", InnerHeaderVisual);
+            ImageVisual.StartAnimation("Offset.Y", OffsetYBind);
 
             await LoadAsync();
         }

@@ -135,11 +135,11 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
         {
             var delta = tracker.Position.X - _LastPositionX;
 
-            if (delta > this.ActualWidth / 4)
+            if (delta > this.ActualWidth / 5)
             {
                 return Math.Min(Items.Count, NowScrollIndex + 1);
             }
-            else if (delta < this.ActualWidth / 4 * 3)
+            else if (delta < this.ActualWidth / 5 * 4)
             {
                 return Math.Max(0, NowScrollIndex);
             }

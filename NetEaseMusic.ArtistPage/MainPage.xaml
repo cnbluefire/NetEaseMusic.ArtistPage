@@ -44,7 +44,7 @@
                     <Rectangle Fill="White" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" RadiusX="10" RadiusY="10" />
                     <tab:Tab IndicatorColor="{StaticResource PrimaryColor}" IndicatorWidth="48">
                         <tab:TabItem Header="热门演唱">
-                            <ListView x:Name="HotSongList" ItemsSource="{x:Bind HotSongs}">
+                            <ListView x:Name="HotSongList" ItemsSource="{x:Bind HotSongs}" >
                                 <ListView.ItemContainerStyle>
                                     <Style TargetType="ListViewItem">
                                         <Setter Property="Padding" Value="0" />
@@ -61,19 +61,21 @@
                                                 <ColumnDefinition Width="Auto" />
                                                 <ColumnDefinition Width="Auto" />
                                             </Grid.ColumnDefinitions>
-                                            <TextBlock Text="{Binding Index}" Margin="5" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                            <StackPanel Grid.Column="1">
-                                                <TextBlock Margin="3,3">
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="*" />
+                                                <RowDefinition Height="Auto" />
+                                            </Grid.RowDefinitions>
+                                            <TextBlock Grid.RowSpan="2" Text="{Binding Index}" Margin="5" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            <TextBlock Margin="3,3" Grid.Column="1" >
                                                     <Run Text="{Binding Name}"></Run>
                                                     <Run Text=" " />
                                                     <Run Text="{Binding SubName}" Foreground="Gray"></Run>
                                                 </TextBlock>
-                                                <TextBlock Margin="3,3" Text="{Binding Album}" FontSize="12" Foreground="DarkGray" />
-                                            </StackPanel>
-                                            <Button Grid.Column="2" Background="Transparent" BorderThickness="0" HorizontalContentAlignment="Center" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                            <TextBlock Grid.Column="1" Grid.Row="1" Margin="3,3" Text="{Binding Album}" FontSize="12" Foreground="DarkGray" />
+                                            <Button Grid.Column="2" Grid.RowSpan="2" Background="Transparent" BorderThickness="0" HorizontalContentAlignment="Center" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                                                 <SymbolIcon Symbol="Video" Foreground="DarkGray" />
                                             </Button>
-                                            <Button Grid.Column="3" Background="Transparent" BorderThickness="0" HorizontalContentAlignment="Center" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                            <Button Grid.Column="3" Grid.RowSpan="2" Background="Transparent" BorderThickness="0" HorizontalContentAlignment="Center" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                                                 <SymbolIcon Symbol="More" Foreground="DarkGray" />
                                             </Button>
                                         </Grid>
