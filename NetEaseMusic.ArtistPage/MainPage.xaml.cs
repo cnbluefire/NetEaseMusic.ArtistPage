@@ -10,10 +10,12 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.UI.Composition;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Data;
+using Windows.UI.Xaml.Hosting;
 using Windows.UI.Xaml.Input;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
@@ -49,27 +51,61 @@ namespace NetEaseMusic.ArtistPage
 
         private void HeaderGrid_SizeChanged(object sender, SizeChangedEventArgs e)
         {
-            ContentBorder.Margin = new Thickness(0, e.NewSize.Height, 0, 0);
+            ContentScrollViewer.Margin = new Thickness(0, InnerHeaderGrid.ActualHeight, 0, 0);
+            ContentGrid.Margin = new Thickness(0, HeaderGrid.ActualHeight - InnerHeaderGrid.ActualHeight, 0, 0);
         }
 
         private void RootGrid_SizeChanged(object sender, SizeChangedEventArgs e)
         {
-            ContentBorder.Width = e.NewSize.Width;
-            ContentBorder.Height = e.NewSize.Height;
+            ContentGrid.Width = e.NewSize.Width;
+            ContentGrid.Height = e.NewSize.Height - InnerHeaderGrid.ActualHeight;
         }
 
         private async Task LoadAsync()
         {
             var songs = await songService.GetHotSongList();
-            foreach(var song in songs)
+            foreach (var song in songs)
             {
                 HotSongs.Add(song);
             }
         }
 
+        Visual ImageVisual;
+        ExpressionAnimation CenterPointBind;
+        ExpressionAnimation ScaleBind;
+        CompositionPropertySet ScrollPropertySet;
+
         private async void RootGrid_Loaded(object sender, RoutedEventArgs e)
         {
+            ScrollViewer.SetVerticalScrollMode(HotSongList, ScrollMode.Disabled);
+
+            ScrollPropertySet = ElementCompositionPreview.GetScrollViewerManipulationPropertySet(ContentScrollViewer);
+            ImageVisual = ElementCompositionPreview.GetElementVisual(ImageGrid);
+
+            CenterPointBind = ImageVisual.Compositor.CreateExpressionAnimation("Vector3(target.Size.X / 2,target.Size.Y / 2,0)");
+            CenterPointBind.SetReferenceParameter("target", ImageVisual);
+            ImageVisual.StartAnimation("CenterPoint", CenterPointBind);
+
+            ScaleBind = ImageVisual.Compositor.CreateExpressionAnimation("Vector3(1.25 + (max(scroll.Translation.Y ,0)) / 200, 1.25 + (max(scroll.Translation.Y ,0)) / 200 ,0)");
+            ScaleBind.SetReferenceParameter("scroll", ScrollPropertySet);
+            ImageVisual.StartAnimation("Scale", ScaleBind);
+
+
             await LoadAsync();
+        }
+
+        private void ScrollViewer_ViewChanged(object sender, ScrollViewerViewChangedEventArgs e)
+        {
+            var sv = (ScrollViewer)sender;
+            if (sv.VerticalOffset < HeaderGrid.ActualHeight - InnerHeaderGrid.ActualHeight)
+            {
+                ScrollViewer.SetVerticalScrollMode(HotSongList, ScrollMode.Disabled);
+            }
+            else
+            {
+                ScrollViewer.SetVerticalScrollMode(HotSongList, ScrollMode.Auto);
+            }
+            LightDismiss.Opacity = (sv.VerticalOffset / (HeaderGrid.ActualHeight - InnerHeaderGrid.ActualHeight)) * 0.5 + 0.2;
         }
     }
 }

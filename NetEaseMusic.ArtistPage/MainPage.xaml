@@ -13,61 +13,102 @@
         <Color x:Key="PrimaryColor" >#bc2f2e</Color>
         <SolidColorBrush x:Key="PrimaryBrush" Color="{StaticResource PrimaryColor}" />
     </Page.Resources>
-    <Grid x:Name="RootGrid" SizeChanged="RootGrid_SizeChanged" Background="Black" Loaded="RootGrid_Loaded">
+    <Grid x:Name="RootGrid" SizeChanged="RootGrid_SizeChanged" Loaded="RootGrid_Loaded">
         <Grid x:Name="HeaderGrid" HorizontalAlignment="Stretch" VerticalAlignment="Top" SizeChanged="HeaderGrid_SizeChanged" >
-            <Image x:Name="HeaderImage" HorizontalAlignment="Stretch" VerticalAlignment="Center" Height="150" />
-        </Grid>
-        <ScrollViewer>
-
-            <Grid x:Name="ContentBorder" SizeChanged="ContentBorder_SizeChanged">
-                <Rectangle Fill="White" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" RadiusX="10" RadiusY="10" />
-                <tab:Tab IndicatorColor="{StaticResource PrimaryColor}" IndicatorWidth="48">
-                    <tab:TabItem Header="热门演唱">
-                        <ListView x:Name="HotSongList" ItemsSource="{x:Bind HotSongs}">
-                            <ListView.ItemContainerStyle>
-                                <Style TargetType="ListViewItem">
-                                    
-                                </Style>
-                            </ListView.ItemContainerStyle>
-                            <ListView.ItemTemplate>
-                                <DataTemplate>
-                                    <StackPanel>
-                                        <TextBlock Text="{Binding Index}" />
-                                        <TextBlock Text="{Binding Name}" />
-                                        <TextBlock Text="{Binding SubName}" />
-                                        <TextBlock Text="{Binding Album}" />
-                                    </StackPanel>
-                                </DataTemplate>
-                            </ListView.ItemTemplate>
-                            <ListView.Header>
-                                <Grid>
-                                    <Button HorizontalAlignment="Right" Background="Transparent" BorderThickness="0" Padding="10">
-                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                            <SymbolIcon Symbol="Setting" Foreground="{StaticResource PrimaryBrush}" VerticalAlignment="Center"/>
-                                            <TextBlock Margin="5,0,0,0" VerticalAlignment="Center">管理</TextBlock>
-                                        </StackPanel>
-                                    </Button>
-                                    <Button HorizontalAlignment="Left" Background="Transparent" BorderThickness="0" Padding="10">
-                                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                            <SymbolIcon Symbol="Add" Foreground="{StaticResource PrimaryBrush}" VerticalAlignment="Center"/>
-                                            <TextBlock Margin="5,0,0,0" VerticalAlignment="Center">收藏热门50单曲</TextBlock>
-                                        </StackPanel>
-                                    </Button>
-                                </Grid>
-                            </ListView.Header>
-                        </ListView>
-                    </tab:TabItem>
-                    <tab:TabItem Header="专辑">
-
-                    </tab:TabItem>
-                    <tab:TabItem Header="视频">
-
-                    </tab:TabItem>
-                    <tab:TabItem Header="艺人信息">
-
-                    </tab:TabItem>
-                </tab:Tab>
+            <Grid x:Name="ImageGrid">
+                <Rectangle x:Name="ImageRectangle" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Height="240" RenderTransformOrigin="0.5,0.5">
+                    <Rectangle.Fill>
+                        <ImageBrush AlignmentX="Center" AlignmentY="Center" Stretch="UniformToFill" ImageSource="/Assets/gem.jpg" />
+                    </Rectangle.Fill>
+                </Rectangle>
+                <Rectangle x:Name="LightDismiss" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Fill="Black" Opacity="0.2" />
             </Grid>
-        </ScrollViewer>
+            <Grid x:Name="InnerHeaderGrid" VerticalAlignment="Top" SizeChanged="HeaderGrid_SizeChanged">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="1" Margin="5,10" FontSize="18" Foreground="White">G.E.M 邓紫棋</TextBlock>
+                <Button Background="Transparent" BorderThickness="0" Width="50" HorizontalContentAlignment="Center" VerticalAlignment="Stretch">
+                    <SymbolIcon Symbol="Back" Foreground="White" />
+                </Button>
+                <Button Grid.Column="2" Background="Transparent" BorderThickness="0" Width="50" HorizontalContentAlignment="Center" VerticalAlignment="Stretch">
+                    <SymbolIcon Symbol="ReShare" Foreground="White" />
+                </Button>
+            </Grid>
+        </Grid>
+        <Border x:Name="ScrollViewerBorder">
+            <ScrollViewer x:Name="ContentScrollViewer" VerticalScrollBarVisibility="Hidden" ViewChanged="ScrollViewer_ViewChanged" Canvas.ZIndex="1">
+                <Grid x:Name="ContentGrid" SizeChanged="ContentBorder_SizeChanged">
+                    <Rectangle Fill="White" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" RadiusX="10" RadiusY="10" />
+                    <tab:Tab IndicatorColor="{StaticResource PrimaryColor}" IndicatorWidth="48">
+                        <tab:TabItem Header="热门演唱">
+                            <ListView x:Name="HotSongList" ItemsSource="{x:Bind HotSongs}">
+                                <ListView.ItemContainerStyle>
+                                    <Style TargetType="ListViewItem">
+                                        <Setter Property="Padding" Value="0" />
+                                        <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                                        <Setter Property="HorizontalAlignment" Value="Stretch" />
+                                    </Style>
+                                </ListView.ItemContainerStyle>
+                                <ListView.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="40" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="{Binding Index}" Margin="5" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            <StackPanel Grid.Column="1">
+                                                <TextBlock Margin="3,3">
+                                                    <Run Text="{Binding Name}"></Run>
+                                                    <Run Text=" " />
+                                                    <Run Text="{Binding SubName}" Foreground="Gray"></Run>
+                                                </TextBlock>
+                                                <TextBlock Margin="3,3" Text="{Binding Album}" FontSize="12" Foreground="DarkGray" />
+                                            </StackPanel>
+                                            <Button Grid.Column="2" Background="Transparent" BorderThickness="0" HorizontalContentAlignment="Center" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                                <SymbolIcon Symbol="Video" Foreground="DarkGray" />
+                                            </Button>
+                                            <Button Grid.Column="3" Background="Transparent" BorderThickness="0" HorizontalContentAlignment="Center" HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
+                                                <SymbolIcon Symbol="More" Foreground="DarkGray" />
+                                            </Button>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ListView.ItemTemplate>
+                                <ListView.Header>
+                                    <Grid>
+                                        <Button HorizontalAlignment="Right" Background="Transparent" BorderThickness="0" Padding="10">
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <SymbolIcon Symbol="Setting" Foreground="{StaticResource PrimaryBrush}" VerticalAlignment="Center"/>
+                                                <TextBlock Margin="5,0,0,0" VerticalAlignment="Center">管理</TextBlock>
+                                            </StackPanel>
+                                        </Button>
+                                        <Button HorizontalAlignment="Left" Background="Transparent" BorderThickness="0" Padding="10">
+                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                <SymbolIcon Symbol="Add" Foreground="{StaticResource PrimaryBrush}" VerticalAlignment="Center"/>
+                                                <TextBlock Margin="5,0,0,0" VerticalAlignment="Center">收藏热门50单曲</TextBlock>
+                                            </StackPanel>
+                                        </Button>
+                                    </Grid>
+                                </ListView.Header>
+                            </ListView>
+                        </tab:TabItem>
+                        <tab:TabItem Header="专辑">
+
+                        </tab:TabItem>
+                        <tab:TabItem Header="视频">
+
+                        </tab:TabItem>
+                        <tab:TabItem Header="艺人信息">
+
+                        </tab:TabItem>
+                    </tab:Tab>
+                </Grid>
+            </ScrollViewer>
+        </Border>
     </Grid>
 </Page>

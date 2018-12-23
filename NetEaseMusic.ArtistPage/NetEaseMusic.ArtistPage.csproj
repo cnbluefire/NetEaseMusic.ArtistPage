@@ -113,6 +113,7 @@
     <AppxManifest Include="Package.appxmanifest">
       <SubType>Designer</SubType>
     </AppxManifest>
+    <Content Include="Assets\gem.jpg" />
     <Content Include="Assets\gem.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

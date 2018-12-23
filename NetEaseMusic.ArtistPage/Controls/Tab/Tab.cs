@@ -1,13 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
+using System.Numerics;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading;
 using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.UI;
 using Windows.UI.Composition;
+using Windows.UI.Composition.Interactions;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Data;
@@ -22,25 +25,42 @@ using Windows.UI.Xaml.Media;
 namespace NetEaseMusic.ArtistPage.Controls.Tab
 {
     [ContentProperty(Name = "Items")]
-    public sealed class Tab : ItemsControl
+    public sealed class Tab : ItemsControl, IInteractionTrackerOwner
     {
         public Tab()
         {
             this.DefaultStyleKey = typeof(Tab);
             this.Loaded += OnLoaded;
             this.Unloaded += OnUnloaded;
+            this.SizeChanged += OnSizeChanged;
+
+            OnPointerPressed = new PointerEventHandler(_PointerPressed);
+            OnPointerReleased = new PointerEventHandler(_PointerReleased);
         }
 
         #region Field
 
         private bool _IsLoaded;
+        bool _IsAnimating = false;
+
+        private Border ContentBorder;
 
         private CancellationTokenSource SizeChangedToken;
         private PointerEventHandler OnPointerWheel;
-        private ScrollViewer ScrollViewer;
+        private PointerEventHandler OnPointerPressed;
+        private PointerEventHandler OnPointerReleased;
         private ITabHeader TabHeader;
 
+        private Compositor Compositor => Window.Current.Compositor;
+        private Visual PanelVisual;
+        private Visual HostVisual;
         private CompositionPropertySet ScrollPropertySet;
+        private InteractionTracker tracker;
+        private VisualInteractionSource tracker_source;
+        private ExpressionAnimation PositionOffsetExpression;
+        private ExpressionAnimation PositionScrollExpression;
+
+        private Vector3KeyFrameAnimation PositionAnimation;
 
         private int NowScrollIndex = -1;
         private int LastActiveIndex = -1;
@@ -53,33 +73,22 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
         {
             base.OnApplyTemplate();
 
-            ScrollViewer = GetTemplateChild("ScrollViewer") as ScrollViewer;
             TabHeader = GetTemplateChild("TabsHeaderView") as ITabHeader;
+            ContentBorder = GetTemplateChild("ContentBorder") as Border;
 
             if (TabHeader != null)
             {
                 TabHeader.SelectionChanged += OnHeaderSelectionChanged;
             }
-            if (ScrollViewer != null)
-            {
-                ScrollViewer.DirectManipulationStarted += OnDirectManipulationStarted;
-                ScrollViewer.DirectManipulationCompleted += OnDirectManipulationCompleted;
-                ScrollViewer.ViewChanging += OnViewChanging;
-
-                OnPointerWheel = (s, a) =>
-                {
-                    if (a.OriginalSource is Grid)
-                    {
-                        ItemsPanelRoot?.CancelDirectManipulations();
-                    }
-                };
-
-                ScrollViewer.AddHandler(PointerWheelChangedEvent, OnPointerWheel, true);
-            }
-
-            this.SizeChanged += OnSizeChanged;
 
             TrySetupComposition();
+            SetupTracker();
+
+            if (ContentBorder != null)
+            {
+                ContentBorder.AddHandler(PointerPressedEvent, OnPointerPressed, true);
+                ContentBorder.AddHandler(PointerReleasedEvent, OnPointerReleased, true);
+            }
         }
 
         protected override DependencyObject GetContainerForItemOverride()
@@ -96,18 +105,66 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
 
         #region Private Methods
 
+        private void SetupTracker()
+        {
+            if (ItemsPanelRoot == null && HostVisual == null && PanelVisual == null) return;
+            tracker = InteractionTracker.CreateWithOwner(Compositor, this);
+            tracker.MinPosition = new Vector3(Convert.ToSingle(-this.ActualWidth / 3), 0f, 0f);
+            tracker.MaxPosition = new Vector3(Convert.ToSingle(ItemsPanelRoot.ActualWidth + this.ActualWidth / 3), 0f, 0f);
+
+            tracker_source = VisualInteractionSource.Create(HostVisual);
+            tracker_source.ManipulationRedirectionMode = VisualInteractionSourceRedirectionMode.CapableTouchpadOnly;
+            tracker_source.PositionXChainingMode = InteractionChainingMode.Auto;
+            tracker_source.PositionYChainingMode = InteractionChainingMode.Auto;
+            tracker_source.PositionXSourceMode = InteractionSourceMode.EnabledWithoutInertia;
+            tracker_source.PositionYSourceMode = InteractionSourceMode.Disabled;
+            tracker_source.ScaleSourceMode = InteractionSourceMode.Disabled;
+
+            tracker.InteractionSources.Add(tracker_source);
+
+            PositionOffsetExpression = Compositor.CreateExpressionAnimation("-tracker.Position.X");
+            PositionOffsetExpression.SetReferenceParameter("tracker", tracker);
+            PanelVisual.StartAnimation("Offset.X", PositionOffsetExpression);
+
+            PositionScrollExpression = Compositor.CreateExpressionAnimation("Vector2(-tracker.Position.X,-tracker.Position.Y)");
+            PositionScrollExpression.SetReferenceParameter("tracker", tracker);
+            ScrollPropertySet.StartAnimation("Translation", PositionScrollExpression);
+        }
 
         private int CalcIndex()
         {
-            return (int)(ScrollViewer.HorizontalOffset + 2 / ScrollViewer.ActualWidth);
+            var delta = tracker.Position.X - _LastPositionX;
+
+            if (delta > this.ActualWidth / 4)
+            {
+                return Math.Min(Items.Count, NowScrollIndex + 1);
+            }
+            else if (delta < this.ActualWidth / 4 * 3)
+            {
+                return Math.Max(0, NowScrollIndex);
+            }
+            else
+            {
+                return NowScrollIndex;
+            }
         }
 
         private void TrySetupComposition()
         {
-            if (TabHeader != null)
+            if (TabHeader != null && ItemsPanelRoot != null)
             {
-                ScrollPropertySet = ElementCompositionPreview.GetScrollViewerManipulationPropertySet(ScrollViewer);
+                ScrollPropertySet = Compositor.CreatePropertySet();
+                ScrollPropertySet.InsertVector2("Translation", Vector2.Zero);
                 TabHeader.SetTabsRootScrollPropertySet(ScrollPropertySet);
+
+                HostVisual = ElementCompositionPreview.GetElementVisual(this);
+                PanelVisual = ElementCompositionPreview.GetElementVisual(ItemsPanelRoot);
+
+                PositionAnimation = Compositor.CreateVector3KeyFrameAnimation();
+                PositionAnimation.InsertExpressionKeyFrame(0f, "this.StartingValue");
+                PositionAnimation.InsertExpressionKeyFrame(1f, "Vector3(FinalValue,0f,0f)");
+                PositionAnimation.Duration = TimeSpan.FromSeconds(0.35d);
+                PositionAnimation.Target = "Target";
             }
         }
 
@@ -120,12 +177,26 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
         {
             if (SelectedIndex > -1)
             {
-                ScrollViewer.ChangeView(Index * ScrollViewer.ActualWidth, null, null, disableAnimation);
-                //(ContainerFromIndex(Index) as ContentControl)?.StartBringIntoView(new BringIntoViewOptions() { AnimationDesired = !(disableAnimation) });
+                ChangeView(Index * this.ActualWidth, disableAnimation);
             }
             else
             {
-                ScrollViewer.ChangeView(0, null, null, true);
+                ChangeView(0, true);
+            }
+        }
+
+
+        private void ChangeView(double horizontalOffset, bool disableAnimation = false)
+        {
+            if (tracker == null) return;
+            if (disableAnimation || PositionAnimation == null)
+            {
+                tracker.TryUpdatePosition(new Vector3(Convert.ToSingle(horizontalOffset), 0f, 0f));
+            }
+            else
+            {
+                PositionAnimation.SetScalarParameter("FinalValue", Convert.ToSingle(horizontalOffset));
+                tracker.TryUpdatePositionWithAnimation(PositionAnimation);
             }
         }
 
@@ -202,6 +273,34 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
 
         #region Events Methods
 
+        private void _PointerPressed(object sender, PointerRoutedEventArgs args)
+        {
+            if (args.Pointer.PointerDeviceType == Windows.Devices.Input.PointerDeviceType.Touch)
+            {
+                if (tracker_source != null)
+                {
+                    try
+                    {
+                        var pointer = args.GetCurrentPoint(this);
+                        tracker_source.TryRedirectForManipulation(pointer);
+                    }
+                    catch (Exception ex)
+                    {
+                        Task.Run(() => Debug.WriteLine(ex));
+                    }
+                }
+            }
+        }
+
+        private void _PointerReleased(object sender, PointerRoutedEventArgs args)
+        {
+            //var pointer = args.GetCurrentPoint(this);
+            //if (pointer.PointerDevice.PointerDeviceType == Windows.Devices.Input.PointerDeviceType.Touch)
+            //{
+            //    ReleasePointerCapture(args.Pointer);
+            //}
+        }
+
         private void OnHeaderSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             SyncSelectedIndex(e.NewIndex);
@@ -226,7 +325,9 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
                 }
             }
 
-            UpdateSelectedIndex(SelectedIndex, -1);
+            TrySetupComposition();
+            SetupTracker();
+
             SyncSelectedIndex(SelectedIndex, true);
             _IsLoaded = true;
             await TabHeader.OnTabsLoadedAsync();
@@ -239,14 +340,13 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
             _IsLoaded = false;
             ScrollPropertySet.Dispose();
             ScrollPropertySet = null;
-            ScrollViewer.RemoveHandler(PointerWheelChangedEvent, OnPointerWheel);
         }
 
-        private void OnViewChanging(object sender, ScrollViewerViewChangingEventArgs e)
+        private void OnViewChanging()
         {
-            if (_IsLoaded)
+            if (_IsLoaded && tracker != null)
             {
-                var tmp = (int)(e.NextView.HorizontalOffset / ScrollViewer.ActualWidth);
+                var tmp = (int)(tracker.Position.X / this.ActualWidth);
 
                 if (tmp != NowScrollIndex)//显示左侧
                 {
@@ -270,29 +370,22 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
             }
         }
 
-        private void OnDirectManipulationStarted(object sender, object e)
-        {
-            ScrollViewer.HorizontalSnapPointsType = SnapPointsType.MandatorySingle;
-        }
-
-        private void OnDirectManipulationCompleted(object sender, object e)
-        {
-            UpdateSelectedIndex(CalcIndex(), SelectedIndex);
-            ScrollViewer.HorizontalSnapPointsType = SnapPointsType.Mandatory;
-        }
-
         private void OnSizeChanged(object sender, SizeChangedEventArgs e)
         {
-            if (ScrollViewer == null) return;
             foreach (var item in Items)
             {
                 if (ContainerFromItem(item) is TabItem tabsItem)
                 {
-                    tabsItem.Width = ScrollViewer.ActualWidth;
-                    tabsItem.Height = ScrollViewer.ActualHeight;
+                    tabsItem.Width = this.ActualWidth;
+                    tabsItem.Height = this.ActualHeight;
                 }
             }
             TabHeader.SetTabsWidth(e.NewSize.Width);
+            if (tracker != null)
+            {
+                tracker.MinPosition = new Vector3(Convert.ToSingle(-this.ActualWidth / 3), 0f, 0f);
+                tracker.MaxPosition = new Vector3(Convert.ToSingle(ItemsPanelRoot.ActualWidth + this.ActualWidth / 3), 0f, 0f);
+            }
 
             SizeChangedToken?.Cancel();
             SizeChangedToken = new CancellationTokenSource();
@@ -439,8 +532,56 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
         {
             SelectionChanged?.Invoke(this, new TabSelectionChangedEventArgs() { NewIndex = NewIndex, OldIndex = OldIndex });
         }
-
         #endregion Custom Events
+
+        #region Interaction Tracker Events
+
+        private float _LastPositionX;
+
+        void IInteractionTrackerOwner.CustomAnimationStateEntered(InteractionTracker sender, InteractionTrackerCustomAnimationStateEnteredArgs args)
+        {
+            _LastPositionX = sender.Position.X;
+            _IsAnimating = true;
+        }
+
+        void IInteractionTrackerOwner.IdleStateEntered(InteractionTracker sender, InteractionTrackerIdleStateEnteredArgs args)
+        {
+            if (_IsAnimating)
+            {
+                _IsAnimating = false;
+                _LastPositionX = sender.Position.X;
+            }
+            else
+            {
+                UpdateSelectedIndex(CalcIndex(), SelectedIndex);
+                SyncSelectedIndex(SelectedIndex, false);
+            }
+        }
+
+        void IInteractionTrackerOwner.InertiaStateEntered(InteractionTracker sender, InteractionTrackerInertiaStateEnteredArgs args)
+        {
+        }
+
+        void IInteractionTrackerOwner.InteractingStateEntered(InteractionTracker sender, InteractionTrackerInteractingStateEnteredArgs args)
+        {
+            if (_IsAnimating)
+            {
+                _IsAnimating = false;
+            }
+            _LastPositionX = sender.Position.X;
+        }
+
+        void IInteractionTrackerOwner.RequestIgnored(InteractionTracker sender, InteractionTrackerRequestIgnoredArgs args)
+        {
+        }
+
+        void IInteractionTrackerOwner.ValuesChanged(InteractionTracker sender, InteractionTrackerValuesChangedArgs args)
+        {
+            OnViewChanging();
+        }
+
+        #endregion Interaction Tracker Events
+
     }
 
     public delegate void TabSelectionChangedEvent(Tab sender, TabSelectionChangedEventArgs args);
