@@ -44,7 +44,7 @@
                     <Rectangle Fill="White" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" RadiusX="10" RadiusY="10" />
                     <tab:Tab IndicatorColor="{StaticResource PrimaryColor}" IndicatorWidth="48">
                         <tab:TabItem Header="热门演唱">
-                            <ListView x:Name="HotSongList" ItemsSource="{x:Bind HotSongs}" >
+                            <ListView x:Name="HotSongList" ItemsSource="{x:Bind HotSongs}" Loaded="HotSongList_Loaded" >
                                 <ListView.ItemContainerStyle>
                                     <Style TargetType="ListViewItem">
                                         <Setter Property="Padding" Value="0" />

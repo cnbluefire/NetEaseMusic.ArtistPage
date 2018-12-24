@@ -1,4 +1,5 @@
-﻿using NetEaseMusic.ArtistPage.Models;
+﻿using Microsoft.Toolkit.Uwp.UI.Extensions;
+using NetEaseMusic.ArtistPage.Models;
 using NetEaseMusic.ArtistPage.Services;
 using System;
 using System.Collections.Generic;
@@ -34,8 +35,30 @@ namespace NetEaseMusic.ArtistPage
             this.InitializeComponent();
             songService = new SongService();
             HotSongs = new ObservableCollection<HotSongModel>();
+            AddHandler(PointerPressedEvent, new PointerEventHandler(_PointerPressed), true);
+            AddHandler(PointerReleasedEvent, new PointerEventHandler(_PointerReleased), true);
+            AddHandler(PointerCanceledEvent, new PointerEventHandler(_PointerReleased), true);
+            AddHandler(PointerWheelChangedEvent, new PointerEventHandler(_PointerWheelChanged), true);
         }
 
+        private void _PointerWheelChanged(object sender, PointerRoutedEventArgs e)
+        {
+            UpdateScrollState();
+        }
+
+        private void _PointerReleased(object sender, PointerRoutedEventArgs e)
+        {
+            _LastPointer = null;
+            UpdateScrollState();
+        }
+
+        private void _PointerPressed(object sender, PointerRoutedEventArgs e)
+        {
+            _LastPointer = e.Pointer;
+            UpdateScrollState();
+        }
+
+        Pointer _LastPointer;
         SongService songService;
         ObservableCollection<HotSongModel> HotSongs { get; set; }
 
@@ -46,16 +69,16 @@ namespace NetEaseMusic.ArtistPage
 
         private void HeaderGrid_SizeChanged(object sender, SizeChangedEventArgs e)
         {
-            ContentScrollViewer.Margin = new Thickness(0, InnerHeaderGrid.ActualHeight, 0, 0);
-            ContentGrid.Margin = new Thickness(0, HeaderGrid.ActualHeight - InnerHeaderGrid.ActualHeight, 0, 0);
+            //ContentScrollViewer.Margin = new Thickness(0, InnerHeaderGrid.ActualHeight, 0, 0);
+            ContentGrid.Margin = new Thickness(0, HeaderGrid.ActualHeight, 0, 0);
         }
 
         private void RootGrid_SizeChanged(object sender, SizeChangedEventArgs e)
         {
             ContentGrid.Width = e.NewSize.Width;
             ContentGrid.Height = e.NewSize.Height - InnerHeaderGrid.ActualHeight;
-            HotSongList.Height = e.NewSize.Height - InnerHeaderGrid.ActualHeight;
-            
+            HotSongList.Height = e.NewSize.Height - InnerHeaderGrid.ActualHeight - 44;
+
         }
 
         private async Task LoadAsync()
@@ -67,6 +90,8 @@ namespace NetEaseMusic.ArtistPage
             }
         }
 
+        ScrollViewer HotSongScrollViewer;
+
         Visual ImageVisual;
         Visual HeaderVisual;
         Visual InnerHeaderVisual;
@@ -77,6 +102,7 @@ namespace NetEaseMusic.ArtistPage
 
         private async void RootGrid_Loaded(object sender, RoutedEventArgs e)
         {
+
             ScrollViewer.SetVerticalScrollMode(HotSongList, ScrollMode.Disabled);
 
             ScrollPropertySet = ElementCompositionPreview.GetScrollViewerManipulationPropertySet(ContentScrollViewer);
@@ -102,18 +128,56 @@ namespace NetEaseMusic.ArtistPage
             await LoadAsync();
         }
 
+        private void HotSongScrollViewer_ViewChanged(object sender, ScrollViewerViewChangedEventArgs e)
+        {
+            UpdateScrollState();
+
+        }
+
         private void ScrollViewer_ViewChanged(object sender, ScrollViewerViewChangedEventArgs e)
         {
             var sv = (ScrollViewer)sender;
-            if (sv.VerticalOffset < HeaderGrid.ActualHeight - InnerHeaderGrid.ActualHeight)
+            //if (sv.VerticalOffset < HeaderGrid.ActualHeight - InnerHeaderGrid.ActualHeight)
+            //{
+            //    ScrollViewer.SetVerticalScrollMode(HotSongList, ScrollMode.Disabled);
+            //}
+            //else
+            //{
+            //    ScrollViewer.SetVerticalScrollMode(HotSongList, ScrollMode.Auto);
+            //}
+            UpdateScrollState();
+            LightDismiss.Opacity = (sv.VerticalOffset / (HeaderGrid.ActualHeight - InnerHeaderGrid.ActualHeight)) * 0.5 + 0.2;
+        }
+
+        private void UpdateScrollState()
+        {
+            if (HotSongScrollViewer == null) return;
+            if (ContentScrollViewer.VerticalOffset < HeaderGrid.ActualHeight - InnerHeaderGrid.ActualHeight)
             {
-                ScrollViewer.SetVerticalScrollMode(HotSongList, ScrollMode.Disabled);
+                if (HotSongScrollViewer.VerticalScrollMode != ScrollMode.Disabled)
+                {
+                    ScrollViewer.SetVerticalScrollMode(HotSongList, ScrollMode.Disabled);
+                }
             }
             else
             {
-                ScrollViewer.SetVerticalScrollMode(HotSongList, ScrollMode.Auto);
+                if (HotSongScrollViewer.VerticalScrollMode != ScrollMode.Auto)
+                {
+                    ScrollViewer.SetVerticalScrollMode(HotSongList, ScrollMode.Auto);
+                }
+                else
+                {
+                    ScrollViewer.SetVerticalScrollMode(HotSongList, ScrollMode.Disabled);
+                }
             }
-            LightDismiss.Opacity = (sv.VerticalOffset / (HeaderGrid.ActualHeight - InnerHeaderGrid.ActualHeight)) * 0.5 + 0.2;
+        }
+
+        private void HotSongList_Loaded(object sender, RoutedEventArgs e)
+        {
+            HotSongScrollViewer = HotSongList.FindDescendant<ScrollViewer>();
+
+            HotSongScrollViewer.ViewChanged += HotSongScrollViewer_ViewChanged;
+
         }
     }
 }

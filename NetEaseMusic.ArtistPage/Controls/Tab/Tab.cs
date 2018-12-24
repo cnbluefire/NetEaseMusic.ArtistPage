@@ -105,50 +105,6 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
 
         #region Private Methods
 
-        private void SetupTracker()
-        {
-            if (ItemsPanelRoot == null && HostVisual == null && PanelVisual == null) return;
-            tracker = InteractionTracker.CreateWithOwner(Compositor, this);
-            tracker.MinPosition = new Vector3(Convert.ToSingle(-this.ActualWidth / 3), 0f, 0f);
-            tracker.MaxPosition = new Vector3(Convert.ToSingle(ItemsPanelRoot.ActualWidth + this.ActualWidth / 3), 0f, 0f);
-
-            tracker_source = VisualInteractionSource.Create(HostVisual);
-            tracker_source.ManipulationRedirectionMode = VisualInteractionSourceRedirectionMode.CapableTouchpadOnly;
-            tracker_source.PositionXChainingMode = InteractionChainingMode.Auto;
-            tracker_source.PositionYChainingMode = InteractionChainingMode.Auto;
-            tracker_source.PositionXSourceMode = InteractionSourceMode.EnabledWithoutInertia;
-            tracker_source.PositionYSourceMode = InteractionSourceMode.Disabled;
-            tracker_source.ScaleSourceMode = InteractionSourceMode.Disabled;
-
-            tracker.InteractionSources.Add(tracker_source);
-
-            PositionOffsetExpression = Compositor.CreateExpressionAnimation("-tracker.Position.X");
-            PositionOffsetExpression.SetReferenceParameter("tracker", tracker);
-            PanelVisual.StartAnimation("Offset.X", PositionOffsetExpression);
-
-            PositionScrollExpression = Compositor.CreateExpressionAnimation("Vector2(-tracker.Position.X,-tracker.Position.Y)");
-            PositionScrollExpression.SetReferenceParameter("tracker", tracker);
-            ScrollPropertySet.StartAnimation("Translation", PositionScrollExpression);
-        }
-
-        private int CalcIndex()
-        {
-            var delta = tracker.Position.X - _LastPositionX;
-
-            if (delta > this.ActualWidth / 5)
-            {
-                return Math.Min(Items.Count, NowScrollIndex + 1);
-            }
-            else if (delta < this.ActualWidth / 5 * 4)
-            {
-                return Math.Max(0, NowScrollIndex);
-            }
-            else
-            {
-                return NowScrollIndex;
-            }
-        }
-
         private void TrySetupComposition()
         {
             if (TabHeader != null && ItemsPanelRoot != null)
@@ -269,6 +225,79 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
             }
         }
 
+
+        private void SetupTracker()
+        {
+            if (ItemsPanelRoot == null && HostVisual == null && PanelVisual == null) return;
+            tracker = InteractionTracker.CreateWithOwner(Compositor, this);
+            tracker.MinPosition = new Vector3(Convert.ToSingle(-this.ActualWidth / 3), 0f, 0f);
+            tracker.MaxPosition = new Vector3(Convert.ToSingle(ItemsPanelRoot.ActualWidth + this.ActualWidth / 3), 0f, 0f);
+
+            tracker_source = VisualInteractionSource.Create(HostVisual);
+            tracker_source.ManipulationRedirectionMode = VisualInteractionSourceRedirectionMode.CapableTouchpadOnly;
+            tracker_source.PositionXChainingMode = InteractionChainingMode.Auto;
+            tracker_source.PositionYChainingMode = InteractionChainingMode.Auto;
+            tracker_source.PositionXSourceMode = InteractionSourceMode.EnabledWithoutInertia;
+            tracker_source.PositionYSourceMode = InteractionSourceMode.Disabled;
+            tracker_source.ScaleSourceMode = InteractionSourceMode.Disabled;
+
+            tracker.InteractionSources.Add(tracker_source);
+
+            PositionOffsetExpression = Compositor.CreateExpressionAnimation("-tracker.Position.X");
+            PositionOffsetExpression.SetReferenceParameter("tracker", tracker);
+            PanelVisual.StartAnimation("Offset.X", PositionOffsetExpression);
+
+            PositionScrollExpression = Compositor.CreateExpressionAnimation("Vector2(-tracker.Position.X,-tracker.Position.Y)");
+            PositionScrollExpression.SetReferenceParameter("tracker", tracker);
+            ScrollPropertySet.StartAnimation("Translation", PositionScrollExpression);
+        }
+
+        private int CalcIndex()
+        {
+            var delta = tracker.Position.X - _LastPositionX;
+
+            if (delta > this.ActualWidth / 5)
+            {
+                return Math.Min(Items.Count, NowScrollIndex + 1);
+            }
+            else if (delta < this.ActualWidth / 5 * 4)
+            {
+                return Math.Max(0, NowScrollIndex);
+            }
+            else
+            {
+                return NowScrollIndex;
+            }
+        }
+
+        private void OnViewChanging()
+        {
+            if (_IsLoaded && tracker != null)
+            {
+                var tmp = (int)(tracker.Position.X / this.ActualWidth);
+
+                if (tmp != NowScrollIndex)//显示左侧
+                {
+                    if (tmp != LastActiveIndex)
+                    {
+                        SyncTabHeader(tmp);
+                        SetContainerLoadState(NowScrollIndex - 1, true);
+                        SetContainerLoadState(NowScrollIndex + 1, false);
+                    }
+                }
+                else if (tmp + 1 != NowScrollIndex) //显示右侧
+                {
+                    if (tmp + 1 != LastActiveIndex)
+                    {
+                        SyncTabHeader(tmp + 1);
+                        SetContainerLoadState(tmp + 1, true);
+                        SetContainerLoadState(tmp - 1, false);
+                    }
+                }
+                NowScrollIndex = tmp;
+            }
+        }
+
         #endregion Private Methods
 
         #region Events Methods
@@ -309,10 +338,15 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
 
         private async void OnLoaded(object sender, RoutedEventArgs e)
         {
-            foreach (var header in Items.Select(c => (ContainerFromItem(c) as TabItem)?.Header))
+            foreach (var item in Items)
             {
-                TabHeader.Items.Add(header);
+                if (ContainerFromItem(item) is TabItem tabsItem)
+                {
+                    tabsItem.Width = this.ActualWidth;
+                    TabHeader.Items.Add(tabsItem.Header);
+                }
             }
+
             if (Items.Count > 0)
             {
                 if (SelectedIndex == -1)
@@ -324,7 +358,6 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
                     UpdateSelectedIndex(SelectedIndex, -1);
                 }
             }
-
             TrySetupComposition();
             SetupTracker();
 
@@ -333,6 +366,17 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
             await TabHeader.OnTabsLoadedAsync();
             SyncTabHeader(SelectedIndex);
             SetContainerLoadState(SelectedIndex, true);
+
+            foreach (var item in Items)
+            {
+                if (ContainerFromItem(item) is TabItem tabsItem)
+                {
+                    if (ContentBorder != null)
+                    {
+                        tabsItem.Height = ContentBorder.ActualHeight;
+                    }
+                }
+            }
         }
 
         private void OnUnloaded(object sender, RoutedEventArgs e)
@@ -342,34 +386,6 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
             ScrollPropertySet = null;
         }
 
-        private void OnViewChanging()
-        {
-            if (_IsLoaded && tracker != null)
-            {
-                var tmp = (int)(tracker.Position.X / this.ActualWidth);
-
-                if (tmp != NowScrollIndex)//显示左侧
-                {
-                    if (tmp != LastActiveIndex)
-                    {
-                        SyncTabHeader(tmp);
-                        SetContainerLoadState(NowScrollIndex - 1, true);
-                        SetContainerLoadState(NowScrollIndex + 1, false);
-                    }
-                }
-                else if (tmp + 1 != NowScrollIndex) //显示右侧
-                {
-                    if (tmp + 1 != LastActiveIndex)
-                    {
-                        SyncTabHeader(tmp + 1);
-                        SetContainerLoadState(tmp + 1, true);
-                        SetContainerLoadState(tmp - 1, false);
-                    }
-                }
-                NowScrollIndex = tmp;
-            }
-        }
-
         private void OnSizeChanged(object sender, SizeChangedEventArgs e)
         {
             foreach (var item in Items)
@@ -377,7 +393,10 @@ namespace NetEaseMusic.ArtistPage.Controls.Tab
                 if (ContainerFromItem(item) is TabItem tabsItem)
                 {
                     tabsItem.Width = this.ActualWidth;
-                    tabsItem.Height = this.ActualHeight;
+                    if (ContentBorder != null)
+                    {
+                        tabsItem.Height = ContentBorder.ActualHeight;
+                    }
                 }
             }
             TabHeader.SetTabsWidth(e.NewSize.Width);
